@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import Sidebar from './Sidebar';
+import SettingsPanel from './SettingsPanel';
 import type { Theme } from '../types';
 
 interface Props {
@@ -10,6 +12,8 @@ interface Props {
 }
 
 export default function Layout({ children, activeModule, onSelectModule, theme, onThemeChange }: Props) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -17,10 +21,15 @@ export default function Layout({ children, activeModule, onSelectModule, theme, 
         onSelect={onSelectModule}
         theme={theme}
         onThemeChange={onThemeChange}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <main className="main-content">
         {children}
       </main>
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }

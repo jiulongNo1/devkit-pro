@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -7,6 +7,7 @@ interface Props {
   onSelect: (id: string) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  onOpenSettings: () => void;
 }
 
 const navItems = [
@@ -16,7 +17,7 @@ const navItems = [
   { id: 'timestamp', name: '时间戳工具', icon: Clock, desc: '时间戳 / 日期互转' },
 ];
 
-export default function Sidebar({ activeModule, onSelect, theme, onThemeChange }: Props) {
+export default function Sidebar({ activeModule, onSelect, theme, onThemeChange, onOpenSettings }: Props) {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
@@ -43,6 +44,10 @@ export default function Sidebar({ activeModule, onSelect, theme, onThemeChange }
         })}
       </nav>
       <div className="sidebar-footer">
+        <button className="theme-toggle" onClick={onOpenSettings}>
+          <Settings size={16} />
+          <span>设置</span>
+        </button>
         <ThemeToggle theme={theme} onChange={onThemeChange} />
       </div>
     </aside>
