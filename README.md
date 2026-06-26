@@ -1,32 +1,149 @@
-# React + TypeScript + Vite
+# DevKit Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+一套现代化的前端开发工具箱，集成常用开发工具，提升开发效率。
 
-Currently, two official plugins are available:
+## ✨ 功能特性
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 🛠 工具模块
 
-## React Compiler
+| 模块 | 功能说明 |
+|------|----------|
+| **JSON 格式化** | JSON 格式化、压缩、语法校验、错误提示 |
+| **正则表达式测试** | 正则匹配测试、实时高亮、多标志位支持 |
+| **编码转换** | Base64 / URL 编码 / HTML 实体 / Unicode 编码解码 |
+| **时间戳工具** | 时间戳与日期互转、当前时间展示、时区支持 |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 📜 历史记录
 
-## Expanding the Oxlint configuration
+- 每个模块独立保存操作历史
+- 支持最近 10 条记录展示
+- 一键回填历史记录到输入框
+- 支持清空当前模块历史
+- 数据持久化存储到 localStorage
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### 🔔 全局 Toast 提示
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- 右下角滑入动画
+- 支持 success / error / info 三种类型
+- 2 秒自动消失，支持手动关闭
+- 同时最多显示 3 条
+- 使用 React Portal 渲染，避免 z-index 问题
+
+### ⌨️ 全局快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `Alt + 1` | 切换到 JSON 格式化模块 |
+| `Alt + 2` | 切换到正则表达式测试模块 |
+| `Alt + 3` | 切换到编码转换模块 |
+| `Alt + 4` | 切换到时间戳工具模块 |
+| `Ctrl + Enter` | 执行当前模块的主操作 |
+| `Ctrl + Shift + C` | 复制当前输出内容 |
+
+### 🎨 其他特性
+
+- 🌙 深色 / 浅色主题切换
+- 📱 响应式布局
+- 💾 本地存储，数据不丢失
+- 🚀 纯前端，无需后端
+
+## 🚀 快速开始
+
+### 安装依赖
+
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### 启动开发服务器
+
+```bash
+npm run dev
+```
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+### 本地预览生产构建
+
+```bash
+npm run preview
+```
+
+### 代码检查
+
+```bash
+npm run lint
+```
+
+## 📁 项目结构
+
+```
+src/
+├── components/          # 通用组件
+│   ├── HistoryPanel.tsx # 历史记录面板
+│   ├── Layout.tsx       # 布局组件
+│   ├── Sidebar.tsx      # 侧边栏导航
+│   ├── ThemeToggle.tsx  # 主题切换
+│   └── Toast.tsx        # Toast 提示组件
+├── hooks/               # 自定义 Hooks
+│   ├── useHistory.tsx   # 历史记录 Hook
+│   ├── useShortcuts.tsx # 快捷键 Hook
+│   ├── useTheme.ts      # 主题 Hook
+│   └── useToast.tsx     # Toast Hook
+├── modules/             # 工具模块
+│   ├── encoder/         # 编码转换
+│   ├── jsonFormatter/   # JSON 格式化
+│   ├── regexTester/     # 正则表达式测试
+│   └── timestamp/       # 时间戳工具
+├── types/               # TypeScript 类型定义
+├── utils/               # 工具函数
+├── App.tsx              # 应用入口
+└── main.tsx             # 渲染入口
+```
+
+## 🛠 技术栈
+
+- **React 19** - UI 框架
+- **TypeScript** - 类型安全
+- **Vite** - 构建工具
+- **Lucide React** - 图标库
+- **Oxlint** - 代码检查
+- **纯 CSS** - 无额外 UI 库依赖
+
+## 📝 使用说明
+
+### JSON 格式化
+
+1. 在左侧输入框粘贴 JSON 数据
+2. 点击「格式化」按钮美化 JSON
+3. 点击「压缩」按钮压缩 JSON
+4. 点击复制按钮复制结果
+
+### 正则表达式测试
+
+1. 输入正则表达式和标志位（如 g、i、m）
+2. 输入测试文本
+3. 实时查看匹配结果和高亮显示
+4. 支持复制所有匹配结果
+
+### 编码转换
+
+1. 选择编码类型（Base64 / URL / HTML / Unicode）
+2. 输入待转换内容
+3. 点击「编码」或「解码」按钮
+4. 查看转换结果并一键复制
+
+### 时间戳工具
+
+1. 输入时间戳，点击「转日期」查看日期时间
+2. 输入日期时间，点击「转时间戳」获取时间戳
+3. 顶部展示当前时间戳和对应日期时间
+4. 支持一键复制
+
+## 📄 License
+
+MIT
