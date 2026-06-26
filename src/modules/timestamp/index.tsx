@@ -1,6 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Copy, Check, Calendar, Clock } from 'lucide-react';
+import { Copy, Calendar, Clock } from 'lucide-react';
 import { copyToClipboard } from '../../utils/storage';
+import { useHistory } from '../../hooks/useHistory';
+import { useToast } from '../../hooks/useToast';
+import { useModuleShortcuts } from '../../hooks/useShortcuts';
+import HistoryPanel from '../../components/HistoryPanel';
+
+const MODULE_ID = 'timestamp';
+const MODULE_NAME = '时间戳工具';
 
 function formatDate(d: Date, withMs = false): string {
   const pad = (n: number) => n.toString().padStart(2, '0');
@@ -13,7 +20,8 @@ export default function TimestampTool() {
   const [dateStr, setDateStr] = useState('');
   const [nowTs, setNowTs] = useState(Date.now());
   const [nowStr, setNowStr] = useState(formatDate(new Date()));
-  const [copied, setCopied] = useState(false);
+  const { addHistory, getModuleHistory, clearModuleHistory } = useHistory();
+  const toast = useToast();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -29,8 +37,15 @@ export default function TimestampTool() {
     const ts = parseInt(timestamp, 10);
     if (isNaN(ts)) { setDateStr('无效的时间戳'); return; }
     const d = new Date(ts.toString().length <= 10 ? ts * 1000 : ts);
-    setDateStr(formatDate(d, true) + '  (星期' + ['日', '一', '二', '三', '四', '五', '六'][d.getDay()] + ')');
-  }, [timestamp]);
+    const formatted = formatDate(d, true) + '  (星期' + ['日', '一', '二', '三', '四', '五', '六'][d.getDay()] + ')';
+    setDateStr(formatted);
+    addHistory({
+      moduleId: MODULE_ID,
+      moduleName: MODULE_NAME,
+      input: `时间戳: ${timestamp}`,
+      output: formatted,
+    });
+  }, [timestamp, addHistory]);
 
   const dateToTs = useCallback(() => {
     if (!dateStr || dateStr.includes('无效')) return;
@@ -42,20 +57,65 @@ export default function TimestampTool() {
         const [, y, m, day, h = '0', min = '0', s = '0'] = match;
         const parsed = new Date(parseInt(y), parseInt(m) - 1, parseInt(day), parseInt(h), parseInt(min), parseInt(s));
         if (!isNaN(parsed.getTime())) {
-          setTimestamp(Math.floor(parsed.getTime() / 1000).toString());
+          const ts = Math.floor(parsed.getTime() / 1000).toString();
+          setTimestamp(ts);
+          addHistory({
+            moduleId: MODULE_ID,
+            moduleName: MODULE_NAME,
+            input: `日期: ${dateStr}`,
+            output: `时间戳: ${ts}`,
+          });
           return;
         }
       }
       setTimestamp('无效的日期格式');
       return;
     }
-    setTimestamp(Math.floor(d.getTime() / 1000).toString());
-  }, [dateStr]);
+    const ts = Math.floor(d.getTime() / 1000).toString();
+    setTimestamp(ts);
+    addHistory({
+      moduleId: MODULE_ID,
+      moduleName: MODULE_NAME,
+      input: `日期: ${dateStr}`,
+      output: `时间戳: ${ts}`,
+    });
+  }, [dateStr, addHistory]);
 
-  const handleCopy = async (text: string) => {
+  const handleCopy = useCallback(async (text: string) => {
     await copyToClipboard(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    toast.success('已复制');
+  }, [toast]);
+
+  // 主操作：根据当前输入执行转换
+  const handleExecute = useCallback(() => {
+    if (timestamp && !timestamp.startsWith('无效')) {
+      tsToDate();
+    } else if (dateStr && !dateStr.startsWith('无效')) {
+      dateToTs();
+    }
+  }, [timestamp, dateStr, tsToDate, dateToTs]);
+
+  // 复制当前时间戳
+  const handleCopyCurrent = useCallback(async () => {
+    await copyToClipboard(nowTs.toString());
+    toast.success('已复制');
+  }, [nowTs, toast]);
+
+  // 注册快捷键：Ctrl+Enter 转换，Ctrl+Shift+C 复制当前时间戳
+  useModuleShortcuts(handleExecute, handleCopyCurrent);
+
+  const handleSelectHistory = (item: { input: string }) => {
+    if (item.input.startsWith('时间戳:')) {
+      setTimestamp(item.input.replace('时间戳: ', '').trim());
+      setDateStr('');
+    } else if (item.input.startsWith('日期:')) {
+      setDateStr(item.input.replace('日期: ', '').trim());
+      setTimestamp('');
+    }
+  };
+
+  const handleClearHistory = () => {
+    clearModuleHistory(MODULE_ID);
   };
 
   return (
@@ -82,7 +142,7 @@ export default function TimestampTool() {
               <div style={{ fontSize: 16, fontFamily: 'var(--font-mono)', color: 'var(--ink)' }}>{Math.floor(nowTs / 1000)}</div>
             </div>
             <button className="ghost" style={{ marginLeft: 'auto' }} onClick={() => handleCopy(nowTs.toString())}>
-              {copied ? <Check size={16} className="success-text" /> : <Copy size={16} />}
+              <Copy size={16} />
             </button>
           </div>
         </div>
@@ -136,6 +196,12 @@ export default function TimestampTool() {
           </div>
         ) : null}
       </div>
+
+      <HistoryPanel
+        history={getModuleHistory(MODULE_ID)}
+        onSelect={handleSelectHistory}
+        onClear={handleClearHistory}
+      />
     </div>
   );
 }

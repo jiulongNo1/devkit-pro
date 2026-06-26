@@ -1,12 +1,20 @@
 import { useState, useCallback } from 'react';
-import { Copy, Check, Sparkles, Minimize2 } from 'lucide-react';
+import { Copy, Sparkles, Minimize2 } from 'lucide-react';
 import { copyToClipboard } from '../../utils/storage';
+import { useHistory } from '../../hooks/useHistory';
+import { useToast } from '../../hooks/useToast';
+import { useModuleShortcuts } from '../../hooks/useShortcuts';
+import HistoryPanel from '../../components/HistoryPanel';
+
+const MODULE_ID = 'jsonFormatter';
+const MODULE_NAME = 'JSON 格式化';
 
 export default function JsonFormatter() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
+  const { addHistory, getModuleHistory, clearModuleHistory } = useHistory();
+  const toast = useToast();
 
   const formatJson = useCallback((compress = false) => {
     if (!input.trim()) {
@@ -21,17 +29,36 @@ export default function JsonFormatter() {
         : JSON.stringify(parsed, null, 2);
       setOutput(formatted);
       setError('');
+      // 保存历史记录
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: input.slice(0, 200),
+        output: compress ? '压缩' : '格式化',
+      });
     } catch (e) {
       setError('JSON 格式错误: ' + (e as Error).message);
       setOutput('');
     }
-  }, [input]);
+  }, [input, addHistory]);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     if (!output) return;
     await copyToClipboard(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    toast.success('已复制');
+  }, [output, toast]);
+
+  // 注册快捷键：Ctrl+Enter 格式化，Ctrl+Shift+C 复制
+  useModuleShortcuts(() => formatJson(false), handleCopy);
+
+  const handleSelectHistory = (item: { input: string }) => {
+    setInput(item.input);
+    setOutput('');
+    setError('');
+  };
+
+  const handleClearHistory = () => {
+    clearModuleHistory(MODULE_ID);
   };
 
   return (
@@ -84,7 +111,7 @@ export default function JsonFormatter() {
                 <>
                   <pre style={{ margin: 0, padding: 0, background: 'transparent', border: 'none' }}>{output}</pre>
                   <button className="ghost copy-btn" onClick={handleCopy}>
-                    {copied ? <Check size={16} className="success-text" /> : <Copy size={16} />}
+                    <Copy size={16} />
                   </button>
                 </>
               ) : (
@@ -94,6 +121,12 @@ export default function JsonFormatter() {
           </div>
         </div>
       </div>
+
+      <HistoryPanel
+        history={getModuleHistory(MODULE_ID)}
+        onSelect={handleSelectHistory}
+        onClear={handleClearHistory}
+      />
     </div>
   );
 }

@@ -1,5 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useHistory } from '../../hooks/useHistory';
+import { useModuleShortcuts } from '../../hooks/useShortcuts';
+import { useToast } from '../../hooks/useToast';
+import { copyToClipboard } from '../../utils/storage';
+import HistoryPanel from '../../components/HistoryPanel';
 
+const MODULE_ID = 'regexTester';
+const MODULE_NAME = '正则测试';
 
 const REGEX_TEMPLATES = [
   { name: '邮箱', pattern: '^[\\w.-]+@[\\w.-]+\\.\\w+$' },
@@ -19,6 +26,8 @@ export default function RegexTester() {
   const [matches, setMatches] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [highlighted, setHighlighted] = useState<React.ReactNode[]>([]);
+  const { addHistory, getModuleHistory, clearModuleHistory } = useHistory();
+  const toast = useToast();
 
   const testRegex = useCallback(() => {
     if (!pattern.trim()) {
@@ -67,12 +76,31 @@ export default function RegexTester() {
         parts.push(<span key={`t${lastIndex}`}>{text.slice(lastIndex)}</span>);
       }
       setHighlighted(parts.length ? parts : [<span key="all">{text}</span>]);
+      
+      // 保存历史记录（当有匹配结果时）
+      if (result.length > 0 && text.trim()) {
+        addHistory({
+          moduleId: MODULE_ID,
+          moduleName: MODULE_NAME,
+          input: `/${pattern}/${flags} - ${text.slice(0, 100)}`,
+          output: `匹配 ${result.length} 处`,
+        });
+      }
     } catch (e) {
       setError('正则表达式错误: ' + (e as Error).message);
       setMatches([]);
       setHighlighted([]);
     }
-  }, [pattern, flags, text]);
+  }, [pattern, flags, text, addHistory]);
+
+  const handleCopyMatches = useCallback(async () => {
+    if (matches.length === 0) return;
+    await copyToClipboard(matches.join('\n'));
+    toast.success('已复制匹配结果');
+  }, [matches, toast]);
+
+  // 注册快捷键：Ctrl+Enter 测试正则，Ctrl+Shift+C 复制匹配结果
+  useModuleShortcuts(testRegex, handleCopyMatches);
 
   useEffect(() => {
     if (pattern && text) {
@@ -82,6 +110,20 @@ export default function RegexTester() {
 
   const applyTemplate = (p: string) => {
     setPattern(p);
+  };
+
+  const handleSelectHistory = (item: { input: string }) => {
+    // 解析历史记录中的正则表达式
+    const match = item.input.match(/^\/(.+?)\/(\w*)\s*-\s*(.*)$/);
+    if (match) {
+      setPattern(match[1]);
+      setFlags(match[2] || 'g');
+      setText(match[3] || '');
+    }
+  };
+
+  const handleClearHistory = () => {
+    clearModuleHistory(MODULE_ID);
   };
 
   return (
@@ -175,6 +217,12 @@ export default function RegexTester() {
           </>
         )}
       </div>
+
+      <HistoryPanel
+        history={getModuleHistory(MODULE_ID)}
+        onSelect={handleSelectHistory}
+        onClear={handleClearHistory}
+      />
     </div>
   );
 }

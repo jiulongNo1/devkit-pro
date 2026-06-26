@@ -1,8 +1,15 @@
 import { useState, useCallback } from 'react';
-import { Copy, Check, ArrowRightLeft } from 'lucide-react';
+import { Copy, ArrowRightLeft } from 'lucide-react';
 import { copyToClipboard } from '../../utils/storage';
+import { useHistory } from '../../hooks/useHistory';
+import { useToast } from '../../hooks/useToast';
+import { useModuleShortcuts } from '../../hooks/useShortcuts';
+import HistoryPanel from '../../components/HistoryPanel';
 
 type EncodeType = 'base64' | 'url' | 'html' | 'unicode';
+
+const MODULE_ID = 'encoder';
+const MODULE_NAME = '编码转换';
 
 const ENCODERS: { id: EncodeType; name: string; encode: (s: string) => string; decode: (s: string) => string }[] = [
   {
@@ -36,33 +43,70 @@ export default function Encoder() {
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
+  const { addHistory, getModuleHistory, clearModuleHistory } = useHistory();
+  const toast = useToast();
 
   const current = ENCODERS.find(e => e.id === type)!;
 
   const handleEncode = useCallback(() => {
     if (!input) { setError(''); setOutput(''); return; }
-    try { setOutput(current.encode(input)); setError(''); }
-    catch (e) { setError('编码失败: ' + (e as Error).message); setOutput(''); }
-  }, [input, current]);
+    try {
+      const result = current.encode(input);
+      setOutput(result);
+      setError('');
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: input.slice(0, 100),
+        output: `[${current.name}编码] ${result.slice(0, 100)}`,
+      });
+    } catch (e) {
+      setError('编码失败: ' + (e as Error).message);
+      setOutput('');
+    }
+  }, [input, current, addHistory]);
 
   const handleDecode = useCallback(() => {
     if (!input) { setError(''); setOutput(''); return; }
-    try { setOutput(current.decode(input)); setError(''); }
-    catch (e) { setError('解码失败: ' + (e as Error).message); setOutput(''); }
-  }, [input, current]);
+    try {
+      const result = current.decode(input);
+      setOutput(result);
+      setError('');
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: input.slice(0, 100),
+        output: `[${current.name}解码] ${result.slice(0, 100)}`,
+      });
+    } catch (e) {
+      setError('解码失败: ' + (e as Error).message);
+      setOutput('');
+    }
+  }, [input, current, addHistory]);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     if (!output) return;
     await copyToClipboard(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
+    toast.success('已复制');
+  }, [output, toast]);
+
+  // 注册快捷键：Ctrl+Enter 编码，Ctrl+Shift+C 复制
+  useModuleShortcuts(handleEncode, handleCopy);
 
   const handleSwap = () => {
     setInput(output);
     setOutput('');
     setError('');
+  };
+
+  const handleSelectHistory = (item: { input: string }) => {
+    setInput(item.input);
+    setOutput('');
+    setError('');
+  };
+
+  const handleClearHistory = () => {
+    clearModuleHistory(MODULE_ID);
   };
 
   return (
@@ -125,7 +169,7 @@ export default function Encoder() {
                 <>
                   <pre style={{ margin: 0, padding: 0, background: 'transparent', border: 'none' }}>{output}</pre>
                   <button className="ghost copy-btn" onClick={handleCopy}>
-                    {copied ? <Check size={16} className="success-text" /> : <Copy size={16} />}
+                    <Copy size={16} />
                   </button>
                 </>
               ) : (
@@ -135,6 +179,12 @@ export default function Encoder() {
           </div>
         </div>
       </div>
+
+      <HistoryPanel
+        history={getModuleHistory(MODULE_ID)}
+        onSelect={handleSelectHistory}
+        onClear={handleClearHistory}
+      />
     </div>
   );
 }

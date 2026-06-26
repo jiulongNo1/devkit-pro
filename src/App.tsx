@@ -5,21 +5,26 @@ import RegexTester from './modules/regexTester';
 import Encoder from './modules/encoder';
 import TimestampTool from './modules/timestamp';
 import { useTheme } from './hooks/useTheme';
-import { useHistory } from './hooks/useHistory';
+import { HistoryProvider } from './hooks/useHistory';
+import { ToastProvider } from './hooks/useToast';
+import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
 
-const modules: Record<string, React.ComponentType> = {
+const MODULES = ['json', 'regex', 'encoder', 'timestamp'];
+const moduleComponents: Record<string, React.ComponentType> = {
   json: JsonFormatter,
   regex: RegexTester,
   encoder: Encoder,
   timestamp: TimestampTool,
 };
 
-export default function App() {
+function AppContent() {
   const [activeModule, setActiveModule] = useState('json');
   const { theme, setTheme } = useTheme();
-  useHistory();
 
-  const ActiveComponent = modules[activeModule];
+  // 注册全局快捷键
+  useShortcuts(MODULES, setActiveModule);
+
+  const ActiveComponent = moduleComponents[activeModule];
 
   return (
     <Layout
@@ -30,5 +35,17 @@ export default function App() {
     >
       <ActiveComponent />
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <ShortcutsProvider>
+        <HistoryProvider>
+          <AppContent />
+        </HistoryProvider>
+      </ShortcutsProvider>
+    </ToastProvider>
   );
 }
