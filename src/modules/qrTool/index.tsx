@@ -36,7 +36,7 @@ function useWindowSize() {
 // ============ 组件 ============
 
 export default function QrTool() {
-  const [input, setInput] = useState('https://github.com/jiulongNo1/devkit-pro');
+  const [input, setInput] = useState('');
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [size, setSize] = useState(256);
   const [fgColor, setFgColor] = useState('#000000');
