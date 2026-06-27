@@ -7,7 +7,7 @@
  * - 调色板生成（邻近色、互补色、三色方案）
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Copy, RefreshCw, Palette } from 'lucide-react';
 import { copyToClipboard } from '../../utils/storage';
 import { useToast } from '../../hooks/useToast';

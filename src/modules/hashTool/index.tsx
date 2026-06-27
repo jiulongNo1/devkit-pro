@@ -196,21 +196,21 @@ async function sha512(text: string): Promise<string> {
 
 // ============ AES 加解密（Web Crypto API） ============
 
-function str2ab(str: string): Uint8Array {
-  return new TextEncoder().encode(str);
+function str2ab(str: string): ArrayBuffer {
+  return new TextEncoder().encode(str).buffer;
 }
 
 function ab2hex(buf: ArrayBuffer): string {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function hex2ab(hex: string): Uint8Array {
+function hex2ab(hex: string): ArrayBuffer {
   const cleanHex = hex.replace(/[^0-9a-fA-F]/g, '');
   const bytes = new Uint8Array(cleanHex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = parseInt(cleanHex.substr(i * 2, 2), 16);
   }
-  return bytes;
+  return bytes.buffer;
 }
 
 async function aesEncrypt(text: string, keyStr: string, ivStr: string, mode: 'CBC' | 'GCM'): Promise<string> {

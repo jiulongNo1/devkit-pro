@@ -27,8 +27,8 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES = ['json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool'] as const;
-type ModuleId = typeof MODULES[number];  // 'json' | 'regex' | 'encoder' | 'timestamp'
+const MODULES: string[] = ['json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool'];
+type ModuleId = typeof MODULES[number];
 
 /**
  * 模块组件映射表

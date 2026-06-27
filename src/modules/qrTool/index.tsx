@@ -83,7 +83,7 @@ export default function QrTool() {
       // 如果有 Logo，绘制到中心
       if (logoUrl) {
         const ctx = canvas.getContext('2d')!;
-        const img = new Image();
+        const img = new (window.Image as { new(): HTMLImageElement })();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           const logoWidth = size * logoSize;
