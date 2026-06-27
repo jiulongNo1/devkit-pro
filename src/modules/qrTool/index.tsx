@@ -20,6 +20,19 @@ import { useModuleShortcuts } from '../../hooks/useShortcuts';
 const MODULE_ID = 'qrTool';
 const MODULE_NAME = '二维码工具';
 
+// 获取窗口尺寸
+function useWindowSize() {
+  const [width, setWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return width;
+}
+
 // ============ 组件 ============
 
 export default function QrTool() {
@@ -31,6 +44,14 @@ export default function QrTool() {
   const [logoUrl, setLogoUrl] = useState('');
   const [logoSize, setLogoSize] = useState(0.3); // Logo 占二维码的比例
   const [error, setError] = useState('');
+
+  const windowWidth = useWindowSize();
+  const isMobile = windowWidth <= 600;
+  const isTablet = windowWidth <= 768 && !isMobile;
+
+  // 移动端最大尺寸限制
+  const maxSize = isMobile ? 256 : isTablet ? 320 : 512;
+  const minSize = isMobile ? 128 : 128;
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const toast = useToast();
@@ -206,9 +227,9 @@ export default function QrTool() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <input
                 type="range"
-                min={128}
-                max={512}
-                step={32}
+                min={minSize}
+                max={maxSize}
+                step={isMobile ? 16 : 32}
                 value={size}
                 onChange={e => setSize(Number(e.target.value))}
                 style={{ flex: 1 }}
@@ -323,7 +344,7 @@ export default function QrTool() {
           二维码预览
         </h3>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: isMobile ? 0 : 24 }}>
           {/* 隐藏的 canvas 用于生成 */}
           <canvas
             ref={canvasRef}
@@ -334,21 +355,23 @@ export default function QrTool() {
           {qrDataUrl ? (
             <div
               style={{
-                padding: 16,
+                padding: isMobile ? 12 : 16,
                 background: 'var(--bg3)',
                 borderRadius: 12,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 12,
+                maxWidth: '100%',
               }}
             >
               <img
                 src={qrDataUrl}
                 alt="QR Code"
                 style={{
-                  width: size,
-                  height: size,
+                  width: Math.min(size, isMobile ? 256 : 512),
+                  height: Math.min(size, isMobile ? 256 : 512),
+                  maxWidth: '100%',
                   borderRadius: 8,
                   boxShadow: 'var(--shadow-md)',
                 }}
@@ -361,8 +384,8 @@ export default function QrTool() {
           ) : (
             <div
               style={{
-                width: size,
-                height: size,
+                width: Math.min(size, isMobile ? 256 : 512),
+                height: Math.min(size, isMobile ? 256 : 512),
                 background: 'var(--bg3)',
                 borderRadius: 8,
                 display: 'flex',
@@ -371,7 +394,7 @@ export default function QrTool() {
                 color: 'var(--muted)',
               }}
             >
-              <Image size={48} />
+              <Image size={isMobile ? 32 : 48} />
             </div>
           )}
         </div>
@@ -410,6 +433,32 @@ export default function QrTool() {
           border-radius: 50%;
           cursor: pointer;
           border: 2px solid var(--bg2);
+        }
+
+        @media (max-width: 768px) {
+          .qr-tool-panel {
+            padding: 12px;
+          }
+          .qr-tool-row {
+            flex-direction: column;
+            gap: 8px;
+          }
+          .qr-tool-row label {
+            width: 100%;
+            padding-top: 0;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .qr-preview-container {
+            padding: 8px;
+          }
+          input[type="text"],
+          input[type="textarea"],
+          textarea {
+            font-size: 14px;
+            padding: 10px 12px;
+          }
         }
       `}</style>
     </div>
