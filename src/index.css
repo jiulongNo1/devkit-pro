@@ -161,6 +161,9 @@ pre {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
 }
 
 .sidebar-header {
@@ -609,6 +612,8 @@ pre {
     border-right: none; 
     border-bottom: 1px solid var(--rule); 
     max-height: 200px; 
+    height: auto; 
+    position: static; 
   }
   
   .sidebar-header {

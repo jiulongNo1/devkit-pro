@@ -126,6 +126,7 @@ src/
 - **TypeScript** - 类型安全
 - **Vite** - 构建工具
 - **Lucide React** - 图标库
+- **qrcode** - 二维码生成
 - **Oxlint** - 代码检查
 - **纯 CSS** - 无额外 UI 库依赖
 
