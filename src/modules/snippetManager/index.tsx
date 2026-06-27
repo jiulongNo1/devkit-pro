@@ -9,13 +9,55 @@
  * - 数据持久化存储到 localStorage
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, memo, Component, type ReactNode } from 'react';
 import { BookMarked, Plus, Search, Copy, Edit2, Trash2, X, Check, Tag } from 'lucide-react';
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import { useToast } from '../../hooks/useToast';
 
 const STORAGE_KEY = 'devkit-snippets';
+
+/**
+ * 错误边界组件 - 捕获子组件渲染错误，防止整个页面崩溃
+ * 【设计说明 for C++/Qt 开发者】
+ * - 类似于 Qt 的 QWidget::event() 中的异常捕获 或 try-catch 包裹
+ * - 当子组件抛出错误时，显示降级 UI 而不是让整个应用崩溃
+ * - 这对于 dangerouslySetInnerHTML 等可能与外部 DOM 交互的场景很重要
+ */
+class SnippetErrorBoundary extends Component<{ children: ReactNode; snippetId: string }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode; snippetId: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn('SnippetErrorBoundary caught an error:', error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <pre
+          style={{
+            margin: 0,
+            padding: 16,
+            fontSize: 13,
+            color: 'var(--danger)',
+            background: '#0d1117',
+            fontFamily: 'var(--font-mono)'
+          }}
+        >
+          渲染出错，请刷新页面重试
+        </pre>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const LANGUAGES = [
   'javascript', 'typescript', 'html', 'css', 'json',
@@ -51,6 +93,52 @@ function saveSnippets(snippets: Snippet[]) {
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
+
+/**
+ * 代码高亮显示组件 - 使用 memo 避免不必要的重渲染
+ * 【设计说明 for C++/Qt 开发者】
+ * - React.memo 类似于 Qt 的 QStaticWidget 或 setCacheMode(QGraphicsView::CacheBackground)
+ * - 只有当 props 变化时才会重新渲染，提高列表渲染性能
+ * - 独立组件也能避免 dangerouslySetInnerHTML 对父组件协调的干扰
+ */
+const SnippetCodeBlock = memo(function SnippetCodeBlock({
+  code,
+  language
+}: {
+  code: string;
+  language: string;
+}) {
+  // 使用 useMemo 缓存高亮结果，避免每次渲染都重新计算
+  const highlightedHtml = useMemo(() => {
+    try {
+      const result = hljs.highlight(code, { language, ignoreIllegals: true });
+      return result.value;
+    } catch {
+      return code;
+    }
+  }, [code, language]);
+
+  return (
+    <div style={{ display: 'contents' }}>
+      <pre
+        style={{
+          margin: 0,
+          padding: 16,
+          overflowX: 'auto',
+          fontSize: 13,
+          lineHeight: 1.6,
+          maxHeight: 300,
+          background: '#0d1117'
+        }}
+      >
+        <code
+          className={`hljs language-${language}`}
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+        />
+      </pre>
+    </div>
+  );
+});
 
 export default function SnippetManager() {
   const [snippets, setSnippets] = useState<Snippet[]>([]);
@@ -124,8 +212,13 @@ export default function SnippetManager() {
 
   const handleDelete = (id: string) => {
     if (!confirm('确定要删除这个代码片段吗？')) return;
-    setSnippets(prev => prev.filter(s => s.id !== id));
-    toast.success('已删除');
+    // 使用 requestAnimationFrame 延迟删除，避免与浏览器 DOM 操作冲突
+    // 【设计说明】某些浏览器环境（如内置浏览器、带插件的浏览器）可能会在 React 提交阶段外部修改 DOM
+    // 延迟一帧删除可以确保 React 协调过程与外部 DOM 操作不会在同一个 tick 中冲突
+    requestAnimationFrame(() => {
+      setSnippets(prev => prev.filter(s => s.id !== id));
+      toast.success('已删除');
+    });
   };
 
   const handleAddTag = () => {
@@ -171,15 +264,6 @@ export default function SnippetManager() {
       toast.success('已创建');
     }
     setShowForm(false);
-  };
-
-  const highlightedCode = (code: string, lang: string) => {
-    try {
-      const result = hljs.highlight(code, { language: lang, ignoreIllegals: true });
-      return result.value;
-    } catch {
-      return code;
-    }
   };
 
   return (
@@ -320,20 +404,12 @@ export default function SnippetManager() {
                     </button>
                   </div>
                 </div>
-                <pre style={{
-                  margin: 0,
-                  padding: 16,
-                  overflowX: 'auto',
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  maxHeight: 300,
-                  background: '#0d1117'
-                }}>
-                  <code
-                    className={`hljs language-${snippet.language}`}
-                    dangerouslySetInnerHTML={{ __html: highlightedCode(snippet.content, snippet.language) }}
+                <SnippetErrorBoundary snippetId={snippet.id}>
+                  <SnippetCodeBlock
+                    code={snippet.content}
+                    language={snippet.language}
                   />
-                </pre>
+                </SnippetErrorBoundary>
               </div>
             ))}
           </div>
