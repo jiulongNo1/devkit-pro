@@ -644,14 +644,23 @@ pre {
   }
   
   .nav-item {
-    padding: 8px 14px;
+    padding: 10px;
     font-size: 13px;
     gap: 6px;
     flex-shrink: 0;
-    border-radius: 20px;
+    border-radius: 50%;
     background: var(--bg3);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  
+
+  .nav-item span {
+    display: none;
+  }
+
   .nav-item.active {
     background: var(--accent);
     color: #fff;
