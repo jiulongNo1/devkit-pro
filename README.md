@@ -109,9 +109,11 @@ src/
 │   └── useToast.tsx     # Toast Hook
 ├── modules/             # 工具模块
 │   ├── colorTool/       # 颜色工具
+│   ├── cronTool/        # Cron 工具
 │   ├── encoder/         # 编码转换
 │   ├── hashTool/        # 哈希计算
 │   ├── jsonFormatter/   # JSON 格式化
+│   ├── qrTool/          # 二维码工具
 │   ├── regexTester/     # 正则表达式测试
 │   └── timestamp/       # 时间戳工具
 ├── types/               # TypeScript 类型定义
