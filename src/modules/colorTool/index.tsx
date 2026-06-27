@@ -456,6 +456,16 @@ export default function ColorTool() {
           transform: scale(1.1);
           box-shadow: var(--shadow-lg);
         }
+
+        @media (max-width: 600px) {
+          .palette-row {
+            flex-wrap: wrap;
+          }
+          .palette-block {
+            width: calc((100% - 32px) / 5);
+            height: 40px;
+          }
+        }
       `}</style>
     </div>
   );
