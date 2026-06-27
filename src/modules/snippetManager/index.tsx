@@ -62,8 +62,29 @@ class SnippetErrorBoundary extends Component<{ children: ReactNode; snippetId: s
 const LANGUAGES = [
   'javascript', 'typescript', 'html', 'css', 'json',
   'python', 'java', 'cpp', 'c', 'go', 'rust',
-  'sql', 'bash', 'yaml', 'markdown', 'plaintext'
+  'sql', 'bash', 'yaml', 'markdown', 'plaintext', 'qt'
 ];
+
+// 语言显示名称映射 - 存储时用 key，显示时用 label
+const LANGUAGE_LABELS: Record<string, string> = {
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
+  html: 'HTML',
+  css: 'CSS',
+  json: 'JSON',
+  python: 'Python',
+  java: 'Java',
+  cpp: 'C++',
+  c: 'C',
+  go: 'Go',
+  rust: 'Rust',
+  sql: 'SQL',
+  bash: 'Bash',
+  yaml: 'YAML',
+  markdown: 'Markdown',
+  plaintext: '纯文本',
+  qt: 'Qt/C++'
+};
 
 const PRESET_TAGS = ['前端', '后端', '工具函数', '算法', 'CSS', 'React', 'Vue'];
 
@@ -364,7 +385,7 @@ export default function SnippetManager() {
                         background: 'var(--bg3)',
                         color: 'var(--muted)'
                       }}>
-                        {snippet.language}
+                        {LANGUAGE_LABELS[snippet.language] || snippet.language}
                       </span>
                       {snippet.tags.map(tag => (
                         <span key={tag} style={{
@@ -466,7 +487,7 @@ export default function SnippetManager() {
                   style={{ width: '100%' }}
                 >
                   {LANGUAGES.map(lang => (
-                    <option key={lang} value={lang}>{lang}</option>
+                    <option key={lang} value={lang}>{LANGUAGE_LABELS[lang] || lang}</option>
                   ))}
                 </select>
               </div>
