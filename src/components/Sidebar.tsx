@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -17,6 +17,7 @@ const navItems = [
   { id: 'timestamp', name: '时间戳工具', icon: Clock, desc: '时间戳 / 日期互转' },
   { id: 'colorTool', name: '颜色工具', icon: Palette, desc: 'HEX / RGB / HSL' },
   { id: 'hashTool', name: '哈希计算', icon: Lock, desc: 'MD5 / SHA / AES' },
+  { id: 'qrTool', name: '二维码生成', icon: QrCode, desc: '生成 / 自定义 / 下载' },
 ];
 
 export default function Sidebar({ activeModule, onSelect, theme, onThemeChange, onOpenSettings }: Props) {

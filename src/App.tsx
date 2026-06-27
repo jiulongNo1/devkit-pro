@@ -16,6 +16,7 @@ import Encoder from './modules/encoder';
 import TimestampTool from './modules/timestamp';
 import ColorTool from './modules/colorTool';
 import HashTool from './modules/hashTool';
+import QrTool from './modules/qrTool';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
 import { ToastProvider } from './hooks/useToast';
@@ -26,7 +27,7 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES = ['json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool'] as const;
+const MODULES = ['json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool'] as const;
 type ModuleId = typeof MODULES[number];  // 'json' | 'regex' | 'encoder' | 'timestamp'
 
 /**
@@ -40,6 +41,7 @@ const moduleComponents: Record<ModuleId, React.ComponentType> = {
   timestamp: TimestampTool,
   colorTool: ColorTool,
   hashTool: HashTool,
+  qrTool: QrTool,
 };
 
 /**
