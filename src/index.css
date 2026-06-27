@@ -690,13 +690,22 @@ pre {
   }
   
   .tool-row {
+    flex-direction: column;
     margin-bottom: 12px;
     gap: 8px;
+    width: 100%;
   }
-  
+
+  .tool-row .field {
+    width: 100%;
+  }
+
   .tool-row label {
     font-size: 12px;
     min-width: auto;
+    width: 100%;
+    padding-top: 0;
+    padding-bottom: 4px;
   }
   
   button {
