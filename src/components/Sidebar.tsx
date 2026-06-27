@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -11,6 +11,7 @@ interface Props {
 }
 
 const navItems = [
+  { id: 'home', name: '首页', icon: Home, desc: '仪表盘 / 快捷入口' },
   { id: 'json', name: 'JSON 格式化', icon: FileJson, desc: '美化 / 压缩 / 校验' },
   { id: 'regex', name: '正则测试', icon: Regex, desc: '实时匹配 / 模板库' },
   { id: 'encoder', name: '编码转换', icon: Code2, desc: 'Base64 / URL / HTML' },

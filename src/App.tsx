@@ -19,6 +19,7 @@ import HashTool from './modules/hashTool';
 import QrTool from './modules/qrTool';
 import CronTool from './modules/cronTool';
 import SnippetManager from './modules/snippetManager';
+import Home from './modules/home';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
 import { ToastProvider } from './hooks/useToast';
@@ -29,14 +30,16 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES: string[] = ['json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager'];
+const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager'];
 type ModuleId = typeof MODULES[number];
 
 /**
  * 模块组件映射表
  * 类似于 Qt 的 QWidgetFactory 或 QML 的 Loader
+ * 【注意】home 模块需要 onSelectModule prop，因此在渲染时特殊处理
  */
-const moduleComponents: Record<ModuleId, React.ComponentType> = {
+const moduleComponents: Record<ModuleId, React.ComponentType<any>> = {
+  home: Home,
   json: JsonFormatter,
   regex: RegexTester,
   encoder: Encoder,
@@ -56,7 +59,7 @@ function AppContent() {
   // useState - 类似于 Q_PROPERTY 中的成员变量 + onChanged 信号
   // activeModule: 当前激活的模块 ID（类似于当前页面/视图）
   // setActiveModule: 修改当前模块的方法（类似于 Q_INVOKABLE 或 slots）
-  const [activeModule, setActiveModule] = useState<ModuleId>('json');
+  const [activeModule, setActiveModule] = useState<ModuleId>('home');
   const { theme, setTheme } = useTheme();
 
   // 注册全局快捷键 - 类似于 Qt 的 QShortcut 或全局事件过滤器
@@ -75,7 +78,11 @@ function AppContent() {
     >
       {/* 渲染当前激活的模块组件 */}
       {/* 类似于 QStackedWidget::currentWidget() */}
-      <ActiveComponent />
+      {activeModule === 'home' ? (
+        <Home onSelectModule={setActiveModule} />
+      ) : (
+        <ActiveComponent />
+      )}
     </Layout>
   );
 }
