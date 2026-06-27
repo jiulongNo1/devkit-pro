@@ -11,7 +11,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
-import { QrCode, Download, Image, RefreshCw } from 'lucide-react';
+import { QrCode, Download, Image, RefreshCw, Upload } from 'lucide-react';
 import { useToast } from '../../hooks/useToast';
 import HistoryPanel from '../../components/HistoryPanel';
 import { useHistory } from '../../hooks/useHistory';
@@ -149,6 +149,23 @@ export default function QrTool() {
     setError('');
   };
 
+  // 选择本地文件
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setLogoUrl(result);
+      setError('');
+    };
+    reader.onerror = () => {
+      setError('文件读取失败');
+    };
+    reader.readAsDataURL(file);
+  };
+
   // 历史记录回填
   const handleSelectHistory = (item: { input: string }) => {
     setInput(item.input);
@@ -253,9 +270,18 @@ export default function QrTool() {
                 type="text"
                 value={logoUrl}
                 onChange={e => setLogoUrl(e.target.value)}
-                placeholder="输入图片 URL（可选）"
+                placeholder="输入图片 URL 或选择本地文件..."
                 style={{ flex: 1, fontFamily: 'var(--font-mono)' }}
               />
+              <label className="ghost" style={{ cursor: 'pointer' }} title="选择本地文件">
+                <Upload size={16} />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/gif"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+              </label>
               {logoUrl && (
                 <button className="ghost" onClick={clearLogo} title="清除 Logo">
                   <RefreshCw size={16} />
