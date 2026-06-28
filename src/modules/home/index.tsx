@@ -39,7 +39,8 @@ import {
   Binary,
   FileJson2,
   Cable,
-  Paintbrush
+  Paintbrush,
+  HardDrive
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -67,6 +68,7 @@ const TOOL_MODULES = [
   { id: 'jsonToStruct', name: 'JSON转Struct', icon: FileJson2, desc: 'JSON解析 / 结构体生成', color: '#3b82f6' },
   { id: 'qtSignals', name: 'Qt信号槽', icon: Cable, desc: '信号槽连接 / 参数匹配', color: '#22c55e' },
   { id: 'qssEditor', name: 'QSS编辑器', icon: Paintbrush, desc: 'QSS编辑 / 实时预览', color: '#ec4899' },
+  { id: 'compilerEstimator', name: '资源估算', icon: HardDrive, desc: '内存计算 / 对齐优化', color: '#64748b' },
 ];
 
 interface Props {
