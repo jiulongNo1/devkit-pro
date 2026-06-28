@@ -19,7 +19,7 @@
 | **首页** | 仪表盘、快捷入口、最近使用 |
 | **JSON 格式化** | JSON 格式化、压缩、语法校验、错误提示 |
 | **正则表达式测试** | 正则匹配测试、实时高亮、多标志位支持 |
-| **编码转换** | Base64 / URL 编码 / HTML 实体 / Unicode 编码解码 |
+| **编码转换** | Base64 / URL / HTML 实体 / Unicode 编解码、C++ 字符串格式转换、QString 格式转换 |
 | **时间戳工具** | 时间戳与日期互转、当前时间展示、时区支持 |
 | **颜色工具** | HEX / RGB / HSL 三向互转、调色板生成、随机颜色 |
 | **哈希与校验** | MD5/SHA-1/256/512 哈希、CRC-8/16/32、Adler-32、Sum、XOR、AES-CBC/GCM 加解密 |
@@ -192,10 +192,14 @@ src/
 
 ### 编码转换
 
-1. 选择编码类型（Base64 / URL / HTML / Unicode）
+1. 选择编码类型：
+   - Base64 / URL 编码 / HTML 实体 / Unicode：传统编解码
+   - C++ 字符串：生成多种 C++ 字符串格式（普通字符串、原始字符串、UTF-8 字节数组、宽字符串、char16_t、char32_t）
+   - QString：Qt 字符串格式化（asprintf、arg、QStringLiteral、fromUtf8、fromLocal8Bit、qPrintable）
 2. 输入待转换内容
-3. 点击「编码」或「解码」按钮
+3. 点击「编码」或「解码」按钮（传统模式）或查看实时生成的格式
 4. 查看转换结果并一键复制
+5. C++ 字符串模式还提供字符编码详情表格：Unicode 码点、UTF-8、UTF-16 LE/BE、GBK
 
 ### 时间戳工具
 
