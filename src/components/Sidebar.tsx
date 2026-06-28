@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight, Binary } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -26,6 +26,7 @@ const navItems = [
   { id: 'cmakeHelper', name: 'CMake 辅助', icon: FileCode, desc: '语法模板 / 实时解析' },
   { id: 'enumGenerator', name: 'Enum 生成器', icon: ListOrdered, desc: '枚举定义 / 多语言生成' },
   { id: 'byteOrder', name: '字节序转换', icon: ArrowLeftRight, desc: '大端/小端解读 / 翻转' },
+  { id: 'bitVisual', name: '位操作可视化', icon: Binary, desc: '二进制位操作 / 实时交互' },
 ];
 
 export default function Sidebar({ activeModule, onSelect, theme, onThemeChange, onOpenSettings }: Props) {

@@ -35,7 +35,8 @@ import {
   Calculator,
   FileCode,
   ListOrdered,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Binary
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -59,6 +60,7 @@ const TOOL_MODULES = [
   { id: 'cmakeHelper', name: 'CMake 辅助', icon: FileCode, desc: '语法模板 / 实时解析', color: '#8b5cf6' },
   { id: 'enumGenerator', name: 'Enum 生成器', icon: ListOrdered, desc: '枚举定义 / 多语言生成', color: '#f97316' },
   { id: 'byteOrder', name: '字节序转换', icon: ArrowLeftRight, desc: '大端/小端解读 / 翻转', color: '#64748b' },
+  { id: 'bitVisual', name: '位操作可视化', icon: Binary, desc: '二进制位操作 / 实时交互', color: '#8b5cf6' },
 ];
 
 interface Props {
