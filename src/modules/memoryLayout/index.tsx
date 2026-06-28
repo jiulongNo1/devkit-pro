@@ -38,8 +38,8 @@ interface StructLayout {
 
 type BitMode = '32' | '64';
 
-// C++ 类型大小映射（单位：字节）
-const TYPE_SIZES: Record<string, number> = {
+// 基础类型大小（32/64 位相同）
+const BASE_TYPE_SIZES: Record<string, number> = {
   'char': 1,
   'int8_t': 1,
   'uint8_t': 1,
@@ -54,8 +54,6 @@ const TYPE_SIZES: Record<string, number> = {
   'uint32_t': 4,
   'int32_t': 4,
   'unsigned int': 4,
-  'long': 4,
-  'unsigned long': 4,
   'float': 4,
   'long long': 8,
   'int64_t': 8,
@@ -66,47 +64,31 @@ const TYPE_SIZES: Record<string, number> = {
   'void': 8,
 };
 
-// 32 位模式下的类型大小
-// 【注意】Windows LLP64 数据模型：32位和64位下 long long/int64_t/uint64_t 都是 8 字节
-// 只有 long（4字节）和指针（4/8字节）会随位数变化
+// 64 位模式类型大小（Linux LP64：long 在 64 位下为 8 字节）
+const TYPE_SIZES_64: Record<string, number> = {
+  ...BASE_TYPE_SIZES,
+  'long': 8,              // LP64: long = 8 字节
+  'unsigned long': 8,     // LP64: unsigned long = 8 字节
+  'size_t': 8, 'ssize_t': 8, 'ptrdiff_t': 8,
+};
+
+// 32 位模式类型大小
 const TYPE_SIZES_32: Record<string, number> = {
-  // 字符和短整型
-  'char': 1, 'int8_t': 1, 'uint8_t': 1, 'signed char': 1, 'unsigned char': 1,
-  'short': 2, 'int16_t': 2, 'uint16_t': 2, 'unsigned short': 2, 'wchar_t': 2,
-  // 整型和浮点型（32/64位相同）
-  'int': 4, 'uint32_t': 4, 'int32_t': 4, 'unsigned int': 4,
-  'float': 4,
-  // long 系列在 Windows 32/64 位都是 4 字节
-  'long': 4, 'unsigned long': 4,
-  // long long 和 64 位整型在 Windows 32/64 位都是 8 字节（LLP64 模型）
-  'long long': 8, 'int64_t': 8, 'uint64_t': 8, 'unsigned long long': 8,
-  'double': 8,
-  // 其他类型
-  'bool': 1, 'void': 8,
-  // 32 位特有的类型
+  ...BASE_TYPE_SIZES,
+  'long': 4,              // Windows/Linux 32 位都是 4 字节
+  'unsigned long': 4,
   'size_t': 4, 'ssize_t': 4, 'ptrdiff_t': 4,
 };
 
 // 类型对齐值（64位）
 const TYPE_ALIGNMENTS: Record<string, number> = {
-  'char': 1,
-  'int8_t': 1,
-  'uint8_t': 1,
-  'short': 2,
-  'int16_t': 2,
-  'uint16_t': 2,
-  'int': 4,
-  'uint32_t': 4,
-  'int32_t': 4,
-  'float': 4,
-  'long': 4,
-  'unsigned long': 4,
-  'long long': 8,
-  'int64_t': 8,
-  'uint64_t': 8,
-  'double': 8,
+  'char': 1, 'int8_t': 1, 'uint8_t': 1,
+  'short': 2, 'int16_t': 2, 'uint16_t': 2,
+  'int': 4, 'uint32_t': 4, 'int32_t': 4, 'float': 4,
+  'long': 8, 'unsigned long': 8,  // LP64: long 对齐值 = 8
+  'long long': 8, 'int64_t': 8, 'uint64_t': 8, 'double': 8,
   'bool': 1,
-  'size_t': 8,
+  'size_t': 8, 'ssize_t': 8, 'ptrdiff_t': 8,
 };
 
 // 32 位对齐值
@@ -191,7 +173,7 @@ const TEMPLATES = [
  * 获取类型大小
  */
 function getTypeSize(type: string, bitMode: BitMode): number {
-  const sizes = bitMode === '32' ? TYPE_SIZES_32 : TYPE_SIZES;
+  const sizes = bitMode === '32' ? TYPE_SIZES_32 : TYPE_SIZES_64;
   const cleanType = type.replace(/\bconst\b/g, '').trim();
   
   // 检测指针类型（以 * 结尾）
