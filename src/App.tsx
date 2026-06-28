@@ -22,6 +22,7 @@ import SnippetManager from './modules/snippetManager';
 import MemoryLayout from './modules/memoryLayout';
 import ProgrammerCalc from './modules/programmerCalc';
 import CMakeHelper from './modules/cmakeHelper';
+import EnumGenerator from './modules/enumGenerator';
 import Home from './modules/home';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
@@ -33,7 +34,7 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper'];
+const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper', 'enumGenerator'];
 type ModuleId = typeof MODULES[number];
 
 /**
@@ -55,6 +56,7 @@ const moduleComponents: Record<ModuleId, React.ComponentType<any>> = {
   memoryLayout: MemoryLayout,
   programmerCalc: ProgrammerCalc,
   cmakeHelper: CMakeHelper,
+  enumGenerator: EnumGenerator,
 };
 
 /**

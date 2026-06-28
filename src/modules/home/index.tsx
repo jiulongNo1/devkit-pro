@@ -33,7 +33,8 @@ import {
   Calendar,
   LayoutGrid,
   Calculator,
-  FileCode
+  FileCode,
+  ListOrdered
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -55,6 +56,7 @@ const TOOL_MODULES = [
   { id: 'memoryLayout', name: '内存布局', icon: LayoutGrid, desc: 'Struct 内存可视化', color: '#f43f5e' },
   { id: 'programmerCalc', name: '程序员计算器', icon: Calculator, desc: '进制转换 / 位操作', color: '#0ea5e9' },
   { id: 'cmakeHelper', name: 'CMake 辅助', icon: FileCode, desc: '语法模板 / 实时解析', color: '#8b5cf6' },
+  { id: 'enumGenerator', name: 'Enum 生成器', icon: ListOrdered, desc: '枚举定义 / 多语言生成', color: '#f97316' },
 ];
 
 interface Props {
