@@ -247,7 +247,19 @@ function parseStruct(code: string, bitMode: BitMode): StructLayout | null {
     const fieldName = match[2];
     const arraySize = match[3] ? parseInt(match[3]) : null;
 
-    const baseType = fullType.replace(/\s+/g, ' ').split(' ')[0];
+    // 正确处理多词类型（如 long long、unsigned int、unsigned long long）
+    let baseType = fullType;
+    
+    // 检查是否为带 unsigned/signed 前缀的类型
+    const typeParts = fullType.replace(/\s+/g, ' ').split(' ');
+    if (typeParts.length >= 2) {
+      const combinedType = typeParts.join(' ');
+      if (TYPE_SIZES_64[combinedType] !== undefined) {
+        baseType = combinedType;
+      } else if (TYPE_SIZES_64[typeParts[typeParts.length - 1]] !== undefined) {
+        baseType = typeParts[typeParts.length - 1];
+      }
+    }
 
     let fieldSize = getTypeSize(baseType, bitMode);
     if (arraySize) {
