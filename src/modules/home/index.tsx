@@ -34,7 +34,8 @@ import {
   LayoutGrid,
   Calculator,
   FileCode,
-  ListOrdered
+  ListOrdered,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -57,6 +58,7 @@ const TOOL_MODULES = [
   { id: 'programmerCalc', name: '程序员计算器', icon: Calculator, desc: '进制转换 / 位操作', color: '#0ea5e9' },
   { id: 'cmakeHelper', name: 'CMake 辅助', icon: FileCode, desc: '语法模板 / 实时解析', color: '#8b5cf6' },
   { id: 'enumGenerator', name: 'Enum 生成器', icon: ListOrdered, desc: '枚举定义 / 多语言生成', color: '#f97316' },
+  { id: 'byteOrder', name: '字节序转换', icon: ArrowLeftRight, desc: '大端/小端解读 / 翻转', color: '#64748b' },
 ];
 
 interface Props {
