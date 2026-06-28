@@ -175,8 +175,24 @@ const TEMPLATES = [
  */
 function getTypeSize(type: string, bitMode: BitMode): number {
   const sizes = bitMode === '32' ? TYPE_SIZES_32 : TYPE_SIZES;
-  const cleanType = type.replace(/\bconst\b/g, '').replace(/\*$/, '').trim();
-  return sizes[cleanType] || 8;
+  const cleanType = type.replace(/\bconst\b/g, '').trim();
+  
+  // 检测指针类型（以 * 结尾）
+  const isPointer = cleanType.endsWith('*');
+  const baseType = isPointer ? cleanType.slice(0, -1).trim() : cleanType;
+  
+  // 如果是指针，返回指针大小（32位: 4, 64位: 8）
+  if (isPointer) {
+    return bitMode === '32' ? 4 : 8;
+  }
+  
+  // 查找已知类型大小
+  if (sizes[baseType]) {
+    return sizes[baseType];
+  }
+  
+  // 未知类型（如自定义结构体），假设最大对齐值作为大小
+  return bitMode === '32' ? 4 : 8;
 }
 
 /**
@@ -184,8 +200,24 @@ function getTypeSize(type: string, bitMode: BitMode): number {
  */
 function getTypeAlignment(type: string, bitMode: BitMode): number {
   const alignments = bitMode === '32' ? ALIGNMENT_32 : TYPE_ALIGNMENTS;
-  const cleanType = type.replace(/\bconst\b/g, '').replace(/\*$/, '').trim();
-  return alignments[cleanType] || 8;
+  const cleanType = type.replace(/\bconst\b/g, '').trim();
+  
+  // 检测指针类型（以 * 结尾）
+  const isPointer = cleanType.endsWith('*');
+  const baseType = isPointer ? cleanType.slice(0, -1).trim() : cleanType;
+  
+  // 如果是指针，返回指针对齐值（32位: 4, 64位: 8）
+  if (isPointer) {
+    return bitMode === '32' ? 4 : 8;
+  }
+  
+  // 查找已知类型对齐值
+  if (alignments[baseType]) {
+    return alignments[baseType];
+  }
+  
+  // 未知类型（如自定义结构体），假设最大对齐值
+  return bitMode === '32' ? 4 : 8;
 }
 
 /**
