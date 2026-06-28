@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight, Binary, FileJson2, Cable, Paintbrush, HardDrive } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight, Binary, FileJson2, Cable, Paintbrush, HardDrive, Languages } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -31,6 +31,7 @@ const navItems = [
   { id: 'qtSignals', name: 'Qt信号槽', icon: Cable, desc: '信号槽连接 / 参数匹配' },
   { id: 'qssEditor', name: 'QSS编辑器', icon: Paintbrush, desc: 'QSS编辑 / 实时预览' },
   { id: 'compilerEstimator', name: '资源估算', icon: HardDrive, desc: '内存计算 / 对齐优化' },
+  { id: 'i18nHelper', name: 'i18n辅助', icon: Languages, desc: '翻译键生成 / 多格式导出' },
 ];
 
 export default function Sidebar({ activeModule, onSelect, theme, onThemeChange, onOpenSettings }: Props) {
