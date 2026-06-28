@@ -30,6 +30,7 @@ import QtSignals from './modules/qtSignals';
 import QssEditor from './modules/qssEditor';
 import CompilerEstimator from './modules/compilerEstimator';
 import I18nHelper from './modules/i18nHelper';
+import SqlBuilder from './modules/sqlBuilder';
 import Home from './modules/home';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
@@ -41,7 +42,7 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper', 'enumGenerator', 'byteOrder', 'bitVisual', 'jsonToStruct', 'qtSignals', 'qssEditor', 'compilerEstimator', 'i18nHelper'];
+const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper', 'enumGenerator', 'byteOrder', 'bitVisual', 'jsonToStruct', 'qtSignals', 'qssEditor', 'compilerEstimator', 'i18nHelper', 'sqlBuilder'];
 type ModuleId = typeof MODULES[number];
 
 /**
@@ -71,6 +72,7 @@ const moduleComponents: Record<ModuleId, React.ComponentType<any>> = {
   qssEditor: QssEditor,
   compilerEstimator: CompilerEstimator,
   i18nHelper: I18nHelper,
+  sqlBuilder: SqlBuilder,
 };
 
 /**

@@ -37,6 +37,7 @@
 | **QSS编辑器** | QSS代码编辑、实时预览、模板库、属性速查、QSS到CSS映射 |
 | **资源估算** | 内存占用计算、对齐优化建议、缓存行分析、布局可视化对比 |
 | **i18n辅助** | 翻译键生成、多格式导出、批量导入、去重检查 |
+| **SQL构建** | 可视化SQL构建、实时预览、Qt代码生成、常用模板 |
 
 ### 📜 历史记录
 
@@ -152,6 +153,7 @@ src/
 │   └── qssEditor/       # QSS样式编辑器
 │   └── compilerEstimator/ # 编译器资源估算器
 │   └── i18nHelper/        # i18n翻译辅助
+│   └── sqlBuilder/        # SQL查询构建器
 ├── types/               # TypeScript 类型定义
 ├── utils/               # 工具函数
 ├── App.tsx              # 应用入口
@@ -459,6 +461,23 @@ src/
 4. 去重检查 Tab：
    - 检查重复键和缺失翻译
    - 统计信息展示
+
+### SQL查询构建器
+
+1. 选择构建模式：可视化 / 直接编辑
+2. 可视化模式：
+   - FROM：输入表名
+   - SELECT：添加查询列（表名.字段名 + 别名）
+   - WHERE：添加条件（字段、运算符、值）
+   - ORDER BY：添加排序字段 + ASC/DESC
+   - GROUP BY / HAVING：分组和分组条件
+   - LIMIT / OFFSET：分页设置
+3. 实时预览生成的 SQL（带语法高亮）
+4. 一键生成 Qt C++ 代码（QSqlQuery + bindValue）
+5. 直接编辑模式：手动输入 SQL
+6. 提供 8 个常用 SQL 模板：
+   - 简单查询 / INSERT / UPDATE / DELETE
+   - JOIN 查询 / 聚合查询 / 子查询 / 分页查询
 
 ### 数据管理
 

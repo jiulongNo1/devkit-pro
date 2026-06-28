@@ -41,7 +41,8 @@ import {
   Cable,
   Paintbrush,
   HardDrive,
-  Languages
+  Languages,
+  Database
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -71,6 +72,7 @@ const TOOL_MODULES = [
   { id: 'qssEditor', name: 'QSS编辑器', icon: Paintbrush, desc: 'QSS编辑 / 实时预览', color: '#ec4899' },
   { id: 'compilerEstimator', name: '资源估算', icon: HardDrive, desc: '内存计算 / 对齐优化', color: '#64748b' },
   { id: 'i18nHelper', name: 'i18n辅助', icon: Languages, desc: '翻译键生成 / 多格式导出', color: '#14b8a6' },
+  { id: 'sqlBuilder', name: 'SQL构建', icon: Database, desc: '可视化构建 / Qt代码生成', color: '#0ea5e9' },
 ];
 
 interface Props {
