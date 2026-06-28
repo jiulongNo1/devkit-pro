@@ -387,6 +387,7 @@ export default function MemoryLayout() {
                       border: 'none',
                       cursor: 'pointer',
                       fontSize: 13,
+                      color: 'var(--ink)',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg2)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'none')}
