@@ -438,12 +438,12 @@ export default function MemoryLayout() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 14 }}>
-                <LayoutGrid size={16} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+              <h3 style={{ margin: 0, fontSize: 14, color: darkTheme ? '#fff' : 'inherit' }}>
+                <LayoutGrid size={16} style={{ verticalAlign: 'middle', marginRight: 8, color: darkTheme ? '#d4d4d4' : 'var(--accent)' }} />
                 内存布局可视化
               </h3>
-              <span style={{ fontSize: 12, color: darkTheme ? '#888' : 'var(--muted)' }}>
-                {bitMode} 位模式 | {layout.name}
+              <span style={{ fontSize: 12, color: darkTheme ? '#d4d4d4' : 'var(--muted)' }}>
+                {bitMode} 位模式 | <span style={{ color: darkTheme ? '#fff' : 'var(--accent)', fontWeight: 600 }}>{layout.name}</span>
               </span>
             </div>
 
@@ -457,7 +457,7 @@ export default function MemoryLayout() {
                     borderRadius: 4,
                     background: FIELD_COLORS[i % FIELD_COLORS.length].bg,
                   }} />
-                  <span style={{ fontSize: 12 }}>{field.name}</span>
+                  <span style={{ fontSize: 12, color: darkTheme ? '#d4d4d4' : 'inherit' }}>{field.name}</span>
                 </div>
               ))}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -468,7 +468,7 @@ export default function MemoryLayout() {
                   background: 'repeating-linear-gradient(45deg, #888, #888 2px, #666 2px, #666 4px)',
                   opacity: 0.6,
                 }} />
-                <span style={{ fontSize: 12 }}>padding</span>
+                <span style={{ fontSize: 12, color: darkTheme ? '#d4d4d4' : 'inherit' }}>padding</span>
               </div>
             </div>
 
