@@ -30,6 +30,7 @@
 | **程序员计算器** | 进制转换（HEX/DEC/OCT/BIN）、位操作、二进制位可视化、BigInt 支持 |
 | **CMake 辅助** | CMakeLists.txt 代码编辑、常用命令模板库、依赖关系解析、错误检测 |
 | **Enum 生成器** | 枚举定义、多语言代码生成（C++11/C/Qt/C#/JSON）、批量导入、一键复制 |
+| **字节序转换** | 十六进制解析、大端/小端解读（uint8/16/32/64、float、double）、一键翻转、示例数据 |
 
 ### 📜 历史记录
 
@@ -137,7 +138,8 @@ src/
 │   ├── timestamp/        # 时间戳工具
 │   ├── programmerCalc/  # 程序员计算器
 │   ├── cmakeHelper/     # CMake 辅助
-│   └── enumGenerator/   # Enum 生成器
+│   ├── enumGenerator/   # Enum 生成器
+│   └── byteOrder/       # 字节序转换
 ├── types/               # TypeScript 类型定义
 ├── utils/               # 工具函数
 ├── App.tsx              # 应用入口
@@ -312,6 +314,23 @@ src/
    - C# enum：public enum 格式
    - JSON Schema：带 descriptions 字段
 6. 一键复制生成的代码
+
+### 字节序转换
+
+1. 输入十六进制字节序列（支持多种格式）：
+   - 空格分隔：`01 02 03 04`
+   - 0x 前缀：`0x01 0x02 0x03`
+   - 无分隔：`01020304`
+   - C 数组格式：`{0x01, 0x02, 0x03, 0x04}`
+2. 实时显示数据类型解读（按数据类型分组表格）：
+   - uint8_t / int8_t（每个字节）
+   - uint16_t / int16_t（每2字节）
+   - uint32_t / int32_t / float（每4字节，IEEE 754）
+   - uint64_t / int64_t / double（每8字节，IEEE 754）
+3. 每种类型显示大端序（BE）和小端序（LE）值
+4. 一键翻转字节序（反转整个序列）
+5. 示例数据：TCP 头部、UDP 头部、IPv4 地址、浮点数、32位整数
+6. 点击复制按钮复制 HEX 和 DEC 值
 
 ### 数据管理
 
