@@ -51,18 +51,28 @@ export default function ProgrammerCalc() {
   const maxBits = DATA_TYPE_BITS[dataType];
 
   const value = useMemo(() => {
-    const num = parseInt(display, getBaseValue(currentBase));
-    return isNaN(num) ? 0 : truncateToBits(num, maxBits);
-  }, [display, currentBase, maxBits]);
-
-  function getBaseValue(base: NumberBase): number {
-    switch (base) {
-      case 'HEX': return 16;
-      case 'OCT': return 8;
-      case 'BIN': return 2;
-      default: return 10;
+    let num: bigint;
+    try {
+      switch (currentBase) {
+        case 'HEX':
+          num = BigInt('0x' + display);
+          break;
+        case 'OCT':
+          num = BigInt('0o' + display);
+          break;
+        case 'BIN':
+          num = BigInt('0b' + display);
+          break;
+        default:
+          num = BigInt(display);
+          break;
+      }
+    } catch {
+      num = BigInt(0);
     }
-  }
+    const mask = (BigInt(1) << BigInt(maxBits)) - BigInt(1);
+    return num & mask;
+  }, [display, currentBase, maxBits]);
 
   function formatNumber(num: bigint | number, base: NumberBase): string {
     const n = typeof num === 'number' ? BigInt(num) : num;
@@ -74,9 +84,10 @@ export default function ProgrammerCalc() {
     }
   }
 
-  function truncateToBits(num: number, bits: number): number {
-    const maxVal = (1 << bits) - 1;
-    return num & maxVal;
+  function truncateToBits(num: bigint | number, bits: number): bigint {
+    const n = typeof num === 'number' ? BigInt(Math.floor(num)) : num;
+    const mask = (BigInt(1) << BigInt(bits)) - BigInt(1);
+    return n & mask;
   }
 
   const decValue = formatNumber(value, 'DEC');
@@ -177,39 +188,41 @@ export default function ProgrammerCalc() {
     const bits = binValue.split('');
     bits[maxBits - 1 - bitIndex] = bits[maxBits - 1 - bitIndex] === '0' ? '1' : '0';
     const newBin = bits.join('');
-    const newValue = parseInt(newBin, 2);
+    const newValue = BigInt('0b' + newBin);
     setDisplay(formatNumber(newValue, currentBase));
   }, [binValue, maxBits, currentBase]);
 
   const handleBitOperation = useCallback((op: string) => {
-    let result: number;
+    const bigValue = value;
+    const bigBits = BigInt(maxBits);
+    let result: bigint;
     switch (op) {
       case 'NOT':
-        result = truncateToBits(~value, maxBits);
+        result = truncateToBits(~bigValue, maxBits);
         break;
       case 'ROL':
-        result = truncateToBits(((value << 1) | (value >> (maxBits - 1))), maxBits);
+        result = truncateToBits(((bigValue << BigInt(1)) | (bigValue >> (bigBits - BigInt(1)))), maxBits);
         break;
       case 'ROR':
-        result = truncateToBits(((value >> 1) | ((value & 1) << (maxBits - 1))), maxBits);
+        result = truncateToBits(((bigValue >> BigInt(1)) | ((bigValue & BigInt(1)) << (bigBits - BigInt(1)))), maxBits);
         break;
       case 'SHL':
-        result = truncateToBits(value << 1, maxBits);
+        result = truncateToBits(bigValue << BigInt(1), maxBits);
         break;
       case 'SHR':
-        result = truncateToBits(value >> 1, maxBits);
+        result = truncateToBits(bigValue >> BigInt(1), maxBits);
         break;
       case '1/x':
-        result = 1 / value;
+        result = truncateToBits(Math.floor(1 / Number(bigValue)), maxBits);
         break;
       case 'x²':
-        result = value * value;
+        result = truncateToBits(bigValue * bigValue, maxBits);
         break;
       case 'x³':
-        result = value * value * value;
+        result = truncateToBits(bigValue * bigValue * bigValue, maxBits);
         break;
       case '√x':
-        result = Math.sqrt(value);
+        result = truncateToBits(Math.floor(Math.sqrt(Number(bigValue))), maxBits);
         break;
       case 'MOD':
         setExpression(expression + ' ' + display + ' MOD');
@@ -225,11 +238,10 @@ export default function ProgrammerCalc() {
         return;
     }
 
-    const truncated = truncateToBits(Math.floor(result), maxBits);
-    setDisplay(formatNumber(truncated, currentBase));
+    setDisplay(formatNumber(result, currentBase));
     setCalculating(true);
 
-    setHistory(prev => [{ expression: `${display} ${op}`, result: truncated.toString() }, ...prev].slice(0, 20));
+    setHistory(prev => [{ expression: `${display} ${op}`, result: result.toString() }, ...prev].slice(0, 20));
   }, [value, maxBits, display, currentBase, expression]);
 
   const handleBaseChange = useCallback((base: NumberBase) => {
@@ -331,17 +343,18 @@ export default function ProgrammerCalc() {
           {display}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
           <div style={{
             padding: 8,
             background: 'var(--bg3)',
             borderRadius: 6,
             border: currentBase === 'HEX' ? '2px solid var(--accent)' : '1px solid var(--border)',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            minHeight: 48
           }} onClick={() => handleBaseChange('HEX')}>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>HEX</div>
-            <div style={{ fontSize: 14, fontFamily: 'var(--font-mono)', marginTop: 2 }}>0x{hexValue}</div>
+            <div style={{ fontSize: 13, fontFamily: 'var(--font-mono)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>0x{hexValue}</div>
           </div>
           <div style={{
             padding: 8,
@@ -349,10 +362,11 @@ export default function ProgrammerCalc() {
             borderRadius: 6,
             border: currentBase === 'DEC' ? '2px solid var(--accent)' : '1px solid var(--border)',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            minHeight: 48
           }} onClick={() => handleBaseChange('DEC')}>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>DEC</div>
-            <div style={{ fontSize: 14, fontFamily: 'var(--font-mono)', marginTop: 2 }}>{decValue}</div>
+            <div style={{ fontSize: 13, fontFamily: 'var(--font-mono)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{decValue}</div>
           </div>
           <div style={{
             padding: 8,
@@ -360,10 +374,11 @@ export default function ProgrammerCalc() {
             borderRadius: 6,
             border: currentBase === 'OCT' ? '2px solid var(--accent)' : '1px solid var(--border)',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            minHeight: 48
           }} onClick={() => handleBaseChange('OCT')}>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>OCT</div>
-            <div style={{ fontSize: 14, fontFamily: 'var(--font-mono)', marginTop: 2 }}>0o{octValue}</div>
+            <div style={{ fontSize: 13, fontFamily: 'var(--font-mono)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>0o{octValue}</div>
           </div>
           <div style={{
             padding: 8,
@@ -371,59 +386,97 @@ export default function ProgrammerCalc() {
             borderRadius: 6,
             border: currentBase === 'BIN' ? '2px solid var(--accent)' : '1px solid var(--border)',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            minHeight: 48
           }} onClick={() => handleBaseChange('BIN')}>
             <div style={{ fontSize: 10, color: 'var(--muted)' }}>BIN</div>
-            <div style={{ fontSize: 14, fontFamily: 'var(--font-mono)', marginTop: 2, wordBreak: 'break-all' }}>{binValue.slice(-16)}</div>
+            <div style={{ fontSize: 12, fontFamily: 'var(--font-mono)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {maxBits > 8 ? `...${binValue.slice(-(maxBits > 32 ? 8 : 12))}` : binValue}
+            </div>
           </div>
         </div>
 
-        {maxBits <= 64 && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Type size={14} />
-              二进制位（点击切换）
-            </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Type size={14} />
+            二进制位（点击切换）
+          </div>
+          <div style={{
+            padding: 8,
+            background: 'var(--bg3)',
+            borderRadius: 6,
+            overflowX: 'auto',
+            maxHeight: 320,
+            overflowY: 'auto'
+          }}>
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(8, 1fr)',
-              gap: 2,
-              maxHeight: 120,
-              overflowY: 'auto',
-              padding: 8,
-              background: 'var(--bg3)',
-              borderRadius: 6
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              minWidth: 'max-content'
             }}>
-              {Array.from({ length: maxBits }).map((_, i) => {
-                const bit = binValue[maxBits - 1 - i];
+              {Array.from({ length: maxBits / 8 }).map((_, byteIndex) => {
+                const startBit = maxBits - byteIndex * 8;
                 return (
-                  <button
-                    key={i}
-                    onClick={() => handleBitToggle(i)}
-                    style={{
-                      width: '100%',
-                      aspectRatio: '1',
-                      borderRadius: 4,
-                      border: '1px solid var(--border)',
-                      background: bit === '1' ? 'var(--accent)' : 'var(--bg2)',
-                      color: bit === '1' ? '#fff' : 'var(--muted)',
+                  <div key={byteIndex} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{
                       fontSize: 10,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 600
-                    }}
-                    title={`Bit ${maxBits - 1 - i}`}
-                  >
-                    {bit}
-                  </button>
+                      color: 'var(--muted)',
+                      fontWeight: 500,
+                      width: 60,
+                      flexShrink: 0
+                    }}>
+                      B{byteIndex + 1}
+                    </div>
+                    <div style={{
+                      fontSize: 10,
+                      color: 'var(--muted)',
+                      fontWeight: 500,
+                      width: 80,
+                      flexShrink: 0
+                    }}>
+                      Bits {startBit - 1}-{startBit - 8}
+                    </div>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(8, 1fr)',
+                      gap: 3
+                    }}>
+                      {Array.from({ length: 8 }).map((_, bitInByte) => {
+                        const globalIndex = byteIndex * 8 + bitInByte;
+                        const bit = binValue[maxBits - 1 - globalIndex];
+                        return (
+                          <button
+                            key={globalIndex}
+                            onClick={() => handleBitToggle(globalIndex)}
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 4,
+                              border: '1px solid var(--border)',
+                              background: bit === '1' ? 'var(--accent)' : 'var(--bg2)',
+                              color: bit === '1' ? '#fff' : 'var(--muted)',
+                              fontSize: 12,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 600
+                            }}
+                            title={`Bit ${maxBits - 1 - globalIndex}`}
+                          >
+                            {bit}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="tool-panel" style={{ marginBottom: 16, padding: 16 }}>
