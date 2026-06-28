@@ -34,6 +34,7 @@
 | **位操作可视化** | 位操作可视化（AND/OR/XOR/NOT/移位）、8×8位格子交互、位变化统计、常见操作示例 |
 | **JSON转Struct** | JSON解析生成C++ struct、嵌套对象、nlohmann/json序列化、类型映射规则 |
 | **Qt信号槽** | 信号槽连接生成、参数匹配检查、模板库、连接关系图展示 |
+| **QSS编辑器** | QSS代码编辑、实时预览、模板库、属性速查、QSS到CSS映射 |
 
 ### 📜 历史记录
 
@@ -145,7 +146,8 @@ src/
 │   ├── byteOrder/       # 字节序转换
 │   ├── bitVisual/       # 位操作可视化
 │   ├── jsonToStruct/    # JSON转Struct
-│   └── qtSignals/       # Qt信号槽
+│   ├── qtSignals/       # Qt信号槽
+│   └── qssEditor/       # QSS样式编辑器
 ├── types/               # TypeScript 类型定义
 ├── utils/               # 工具函数
 ├── App.tsx              # 应用入口
@@ -391,6 +393,30 @@ src/
    - QNetworkAccessManager: finished, authenticationRequired, sslErrors
 10. 连接关系图展示当前所有 connect 关系
 11. 支持复制和删除连接记录
+
+### QSS编辑器
+
+1. 左侧 QSS 代码编辑区输入 QSS 样式代码
+2. 右侧实时预览区显示 Qt 控件的样式效果
+3. 支持以下控件模型的样式预览：
+   - QPushButton（按钮，支持 hover/pressed 状态）
+   - QLineEdit（单行输入框）
+   - QTextEdit（多行文本框）
+   - QComboBox（下拉框）
+   - QSlider（滑块）
+   - QProgressBar（进度条）
+   - QCheckBox / QRadioButton（复选框/单选框）
+   - QGroupBox（分组框）
+   - QLabel（标签）
+4. 模板库 Tab：提供 5 个常用模板一键加载
+   - 浅色主题模板
+   - 深色主题模板
+   - 扁平化主题模板
+   - macOS 风格模板
+   - 自定义渐变按钮
+5. 属性速查 Tab：按控件分类列出常用 QSS 属性，点击插入到编辑区
+6. 底部展示 QSS vs CSS 语法差异对照表
+7. QSS 语法自动映射到 CSS 渲染（选择器、伪状态、子控件、渐变函数）
 
 ### 数据管理
 

@@ -38,7 +38,8 @@ import {
   ArrowLeftRight,
   Binary,
   FileJson2,
-  Cable
+  Cable,
+  Paintbrush
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -65,6 +66,7 @@ const TOOL_MODULES = [
   { id: 'bitVisual', name: '位操作可视化', icon: Binary, desc: '二进制位操作 / 实时交互', color: '#8b5cf6' },
   { id: 'jsonToStruct', name: 'JSON转Struct', icon: FileJson2, desc: 'JSON解析 / 结构体生成', color: '#3b82f6' },
   { id: 'qtSignals', name: 'Qt信号槽', icon: Cable, desc: '信号槽连接 / 参数匹配', color: '#22c55e' },
+  { id: 'qssEditor', name: 'QSS编辑器', icon: Paintbrush, desc: 'QSS编辑 / 实时预览', color: '#ec4899' },
 ];
 
 interface Props {

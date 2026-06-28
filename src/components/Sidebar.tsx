@@ -1,4 +1,4 @@
-import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight, Binary, FileJson2, Cable } from 'lucide-react';
+import { FileJson, Regex, Code2, Clock, FlaskConical, Settings, Palette, Lock, QrCode, Timer, BookMarked, Home, LayoutGrid, Calculator, FileCode, ListOrdered, ArrowLeftRight, Binary, FileJson2, Cable, Paintbrush } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import type { Theme } from '../types';
 
@@ -29,6 +29,7 @@ const navItems = [
   { id: 'bitVisual', name: '位操作可视化', icon: Binary, desc: '二进制位操作 / 实时交互' },
   { id: 'jsonToStruct', name: 'JSON转Struct', icon: FileJson2, desc: 'JSON解析 / 结构体生成' },
   { id: 'qtSignals', name: 'Qt信号槽', icon: Cable, desc: '信号槽连接 / 参数匹配' },
+  { id: 'qssEditor', name: 'QSS编辑器', icon: Paintbrush, desc: 'QSS编辑 / 实时预览' },
 ];
 
 export default function Sidebar({ activeModule, onSelect, theme, onThemeChange, onOpenSettings }: Props) {

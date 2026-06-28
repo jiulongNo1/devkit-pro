@@ -27,6 +27,7 @@ import ByteOrder from './modules/byteOrder';
 import BitVisual from './modules/bitVisual';
 import JsonToStruct from './modules/jsonToStruct';
 import QtSignals from './modules/qtSignals';
+import QssEditor from './modules/qssEditor';
 import Home from './modules/home';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
@@ -38,7 +39,7 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper', 'enumGenerator', 'byteOrder', 'bitVisual', 'jsonToStruct', 'qtSignals'];
+const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout', 'programmerCalc', 'cmakeHelper', 'enumGenerator', 'byteOrder', 'bitVisual', 'jsonToStruct', 'qtSignals', 'qssEditor'];
 type ModuleId = typeof MODULES[number];
 
 /**
@@ -65,6 +66,7 @@ const moduleComponents: Record<ModuleId, React.ComponentType<any>> = {
   bitVisual: BitVisual,
   jsonToStruct: JsonToStruct,
   qtSignals: QtSignals,
+  qssEditor: QssEditor,
 };
 
 /**
