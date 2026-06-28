@@ -70,13 +70,21 @@ const TYPE_SIZES: Record<string, number> = {
 // 【注意】Windows LLP64 数据模型：32位和64位下 long long/int64_t/uint64_t 都是 8 字节
 // 只有 long（4字节）和指针（4/8字节）会随位数变化
 const TYPE_SIZES_32: Record<string, number> = {
-  ...TYPE_SIZES,
-  'long': 4,              // Windows 32/64 位都是 4 字节
-  'unsigned long': 4,     // Windows 32/64 位都是 4 字节
-  // long long, int64_t, uint64_t 在 32 位 Windows 下仍是 8 字节（LLP64 模型）
-  'size_t': 4,            // 32 位指针大小
-  'ssize_t': 4,           // 32 位有符号大小
-  'ptrdiff_t': 4,         // 32 位指针差值
+  // 字符和短整型
+  'char': 1, 'int8_t': 1, 'uint8_t': 1, 'signed char': 1, 'unsigned char': 1,
+  'short': 2, 'int16_t': 2, 'uint16_t': 2, 'unsigned short': 2, 'wchar_t': 2,
+  // 整型和浮点型（32/64位相同）
+  'int': 4, 'uint32_t': 4, 'int32_t': 4, 'unsigned int': 4,
+  'float': 4,
+  // long 系列在 Windows 32/64 位都是 4 字节
+  'long': 4, 'unsigned long': 4,
+  // long long 和 64 位整型在 Windows 32/64 位都是 8 字节（LLP64 模型）
+  'long long': 8, 'int64_t': 8, 'uint64_t': 8, 'unsigned long long': 8,
+  'double': 8,
+  // 其他类型
+  'bool': 1, 'void': 8,
+  // 32 位特有的类型
+  'size_t': 4, 'ssize_t': 4, 'ptrdiff_t': 4,
 };
 
 // 类型对齐值（64位）
@@ -103,12 +111,19 @@ const TYPE_ALIGNMENTS: Record<string, number> = {
 
 // 32 位对齐值
 const ALIGNMENT_32: Record<string, number> = {
-  ...TYPE_ALIGNMENTS,
-  'long': 4,              // Windows 32/64 位都是 4
-  'unsigned long': 4,     // Windows 32/64 位都是 4
-  'size_t': 4,           // 32 位指针对齐
-  'ssize_t': 4,          // 32 位有符号指针对齐
-  'ptrdiff_t': 4,        // 32 位指针差值对齐
+  // 字符和短整型
+  'char': 1, 'int8_t': 1, 'uint8_t': 1,
+  'short': 2, 'int16_t': 2, 'uint16_t': 2,
+  // 整型和浮点型
+  'int': 4, 'uint32_t': 4, 'int32_t': 4, 'float': 4,
+  // long 系列
+  'long': 4, 'unsigned long': 4,
+  // long long 和 64 位整型
+  'long long': 8, 'int64_t': 8, 'uint64_t': 8, 'double': 8,
+  // 其他
+  'bool': 1,
+  // 32 位特有
+  'size_t': 4, 'ssize_t': 4, 'ptrdiff_t': 4,
 };
 
 // 字段颜色配置
