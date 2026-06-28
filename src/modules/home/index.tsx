@@ -36,7 +36,9 @@ import {
   FileCode,
   ListOrdered,
   ArrowLeftRight,
-  Binary
+  Binary,
+  FileJson2,
+  Cable
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -61,6 +63,8 @@ const TOOL_MODULES = [
   { id: 'enumGenerator', name: 'Enum 生成器', icon: ListOrdered, desc: '枚举定义 / 多语言生成', color: '#f97316' },
   { id: 'byteOrder', name: '字节序转换', icon: ArrowLeftRight, desc: '大端/小端解读 / 翻转', color: '#64748b' },
   { id: 'bitVisual', name: '位操作可视化', icon: Binary, desc: '二进制位操作 / 实时交互', color: '#8b5cf6' },
+  { id: 'jsonToStruct', name: 'JSON转Struct', icon: FileJson2, desc: 'JSON解析 / 结构体生成', color: '#3b82f6' },
+  { id: 'qtSignals', name: 'Qt信号槽', icon: Cable, desc: '信号槽连接 / 参数匹配', color: '#22c55e' },
 ];
 
 interface Props {

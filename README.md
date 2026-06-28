@@ -32,6 +32,8 @@
 | **Enum 生成器** | 枚举定义、多语言代码生成（C++11/C/Qt/C#/JSON）、批量导入、一键复制 |
 | **字节序转换** | 十六进制解析、大端/小端解读（uint8/16/32/64、float、double）、一键翻转、示例数据 |
 | **位操作可视化** | 位操作可视化（AND/OR/XOR/NOT/移位）、8×8位格子交互、位变化统计、常见操作示例 |
+| **JSON转Struct** | JSON解析生成C++ struct、嵌套对象、nlohmann/json序列化、类型映射规则 |
+| **Qt信号槽** | 信号槽连接生成、参数匹配检查、模板库、连接关系图展示 |
 
 ### 📜 历史记录
 
@@ -141,7 +143,9 @@ src/
 │   ├── cmakeHelper/     # CMake 辅助
 │   ├── enumGenerator/   # Enum 生成器
 │   ├── byteOrder/       # 字节序转换
-│   └── bitVisual/       # 位操作可视化
+│   ├── bitVisual/       # 位操作可视化
+│   ├── jsonToStruct/    # JSON转Struct
+│   └── qtSignals/       # Qt信号槽
 ├── types/               # TypeScript 类型定义
 ├── utils/               # 工具函数
 ├── App.tsx              # 应用入口
@@ -351,6 +355,42 @@ src/
 7. 结果显示：DEC / HEX / OCT / BIN 四种格式，一键复制
 8. 位变化统计：0→1 数量、1→0 数量、总变化数
 9. 常见操作示例：提取位、设置位、清除位、取反位、掩码操作
+
+### JSON转Struct
+
+1. 左侧 JSON 编辑器粘贴或输入 JSON 数据
+2. 选择代码风格：现代 C++ / Qt 风格 / C 结构体
+3. 配置生成选项：
+   - 使用 nlohmann/json 库
+   - 生成 to_json / from_json 序列化函数
+   - 使用 std::optional 处理可空字段
+   - 字符串类型选择（std::string / QString / const char*）
+4. 点击「格式化」自动美化 JSON
+5. 右侧实时生成对应的 C++ struct 定义代码
+6. 支持嵌套 JSON 对象自动生成嵌套 struct
+7. 一键复制生成的代码
+8. 类型映射规则表格清晰展示各类型的映射关系
+9. 3 个示例模板：用户信息、API 响应、配置文件
+
+### Qt信号槽
+
+1. 选择 Qt 版本：Qt5 或 Qt6
+2. 输入发送者对象类型（如 QPushButton）和信号（如 clicked）
+3. 输入接收者对象类型（如 MainWindow）和槽函数（如 onButtonClicked）
+4. 输入信号和槽的参数列表
+5. 实时检查参数匹配状态（绿色✓/红色✗图标）
+6. 预览生成的 connect() 代码
+7. 支持使用 Lambda 连接方式
+8. 点击「添加连接」保存到连接列表
+9. 模板库支持分类快速选择：
+   - QPushButton: clicked, pressed, released, toggled
+   - QLineEdit: textChanged, editingFinished, returnPressed
+   - QComboBox: currentIndexChanged, currentTextChanged
+   - QSlider: valueChanged, sliderMoved, sliderPressed
+   - QTimer: timeout
+   - QNetworkAccessManager: finished, authenticationRequired, sslErrors
+10. 连接关系图展示当前所有 connect 关系
+11. 支持复制和删除连接记录
 
 ### 数据管理
 
