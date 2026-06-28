@@ -14,6 +14,10 @@ import { BookMarked, Plus, Search, Copy, Edit2, Trash2, X, Check, Tag } from 'lu
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
 import { useToast } from '../../hooks/useToast';
+import { useHistory } from '../../hooks/useHistory';
+
+const MODULE_ID = 'snippetManager';
+const MODULE_NAME = '代码片段';
 
 const STORAGE_KEY = 'devkit-snippets';
 
@@ -176,6 +180,7 @@ export default function SnippetManager() {
   });
 
   const toast = useToast();
+  const { addHistory } = useHistory();
 
   useEffect(() => {
     setSnippets(loadSnippets());
@@ -271,6 +276,12 @@ export default function SnippetManager() {
           : s
       ));
       toast.success('已更新');
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: `编辑: ${formData.title}`,
+        output: `标签: ${formData.tags.join(', ')}`,
+      });
     } else {
       const newSnippet: Snippet = {
         id: generateId(),
@@ -283,6 +294,12 @@ export default function SnippetManager() {
       };
       setSnippets(prev => [newSnippet, ...prev]);
       toast.success('已创建');
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: `新建: ${formData.title}`,
+        output: `标签: ${formData.tags.join(', ')}`,
+      });
     }
     setShowForm(false);
   };
