@@ -226,7 +226,23 @@ function parseStruct(code: string, bitMode: BitMode): StructLayout | null {
     const alignment = getTypeAlignment(baseType, bitMode);
     maxAlignment = Math.max(maxAlignment, alignment);
 
+    // 计算字段前需要的 padding（中间 padding）
     const padding = (alignment - (currentOffset % alignment)) % alignment;
+
+    // 如果有中间 padding，先添加 padding 字段
+    if (padding > 0) {
+      fields.push({
+        name: '',
+        type: '',
+        baseType: '',
+        arraySize: null,
+        size: padding,
+        alignment: 1,
+        offset: currentOffset,
+        isPadding: true,
+      });
+    }
+
     const offset = currentOffset + padding;
 
     fields.push({
