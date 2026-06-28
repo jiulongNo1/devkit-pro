@@ -17,7 +17,7 @@ const navItems = [
   { id: 'encoder', name: '编码转换', icon: Code2, desc: 'Base64 / URL / HTML' },
   { id: 'timestamp', name: '时间戳工具', icon: Clock, desc: '时间戳 / 日期互转' },
   { id: 'colorTool', name: '颜色工具', icon: Palette, desc: 'HEX / RGB / HSL' },
-  { id: 'hashTool', name: '哈希计算', icon: Lock, desc: 'MD5 / SHA / AES' },
+  { id: 'hashTool', name: '哈希与校验', icon: Lock, desc: 'MD5/SHA/CRC/AES' },
   { id: 'qrTool', name: '二维码生成', icon: QrCode, desc: '生成 / 自定义 / 下载' },
   { id: 'cronTool', name: 'Cron 工具', icon: Timer, desc: '表达式解析 / 执行时间' },
   { id: 'snippetManager', name: '代码片段', icon: BookMarked, desc: '保存 / 搜索 / 管理' },

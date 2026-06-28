@@ -49,7 +49,7 @@ const TOOL_MODULES = [
   { id: 'encoder', name: '编码转换', icon: Code2, desc: 'Base64 / URL / HTML', color: '#10b981' },
   { id: 'timestamp', name: '时间戳工具', icon: Clock, desc: '时间戳 / 日期互转', color: '#f59e0b' },
   { id: 'colorTool', name: '颜色工具', icon: Palette, desc: 'HEX / RGB / HSL', color: '#ec4899' },
-  { id: 'hashTool', name: '哈希计算', icon: Lock, desc: 'MD5 / SHA / AES', color: '#06b6d4' },
+  { id: 'hashTool', name: '哈希与校验', icon: Lock, desc: 'MD5/SHA/CRC/AES', color: '#06b6d4' },
   { id: 'qrTool', name: '二维码生成', icon: QrCode, desc: '生成 / 自定义 / 下载', color: '#84cc16' },
   { id: 'cronTool', name: 'Cron 工具', icon: Timer, desc: '表达式解析 / 执行时间', color: '#f97316' },
   { id: 'snippetManager', name: '代码片段', icon: BookMarked, desc: '保存 / 搜索 / 管理', color: '#6366f1' },

@@ -1,14 +1,15 @@
 /**
- * HashTool - 哈希计算与加密工具模块
- * 
+ * HashTool - 哈希与校验模块
+ *
  * 【功能说明】
- * - MD5 / SHA-1 / SHA-256 / SHA-512 哈希计算
- * - AES-CBC / AES-GCM 加解密（Web Crypto API）
- * - 一键复制结果
+ * - 密码学哈希：MD5 / SHA-1 / SHA-256 / SHA-512
+ * - 校验和：CRC-8/16/32、Adler-32、Sum、XOR
+ * - AES 加解密：AES-CBC / AES-GCM
+ * - 支持文本和十六进制两种输入模式
  */
 
-import { useState, useCallback } from 'react';
-import { Copy, Lock, Key, RefreshCw } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Copy, Lock, Key, RefreshCw, ShieldCheck, Hash, FileCode } from 'lucide-react';
 import { copyToClipboard } from '../../utils/storage';
 import { useToast } from '../../hooks/useToast';
 import HistoryPanel from '../../components/HistoryPanel';
@@ -16,7 +17,10 @@ import { useHistory } from '../../hooks/useHistory';
 import { useModuleShortcuts } from '../../hooks/useShortcuts';
 
 const MODULE_ID = 'hashTool';
-const MODULE_NAME = '哈希计算';
+const MODULE_NAME = '哈希与校验';
+
+type TabType = 'crypto' | 'checksum' | 'aes';
+type InputMode = 'text' | 'hex';
 
 // ============ MD5 实现（纯 JS） ============
 
@@ -173,28 +177,185 @@ function md5(str: string): string {
 
 // ============ SHA 系列（Web Crypto API） ============
 
-async function sha1(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hash = await crypto.subtle.digest('SHA-1', data);
+async function sha1(data: Uint8Array): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-1', data as unknown as BufferSource);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function sha256(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hash = await crypto.subtle.digest('SHA-256', data);
+async function sha256(data: Uint8Array): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-256', data as unknown as BufferSource);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function sha512(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hash = await crypto.subtle.digest('SHA-512', data);
+async function sha512(data: Uint8Array): Promise<string> {
+  const hash = await crypto.subtle.digest('SHA-512', data as unknown as BufferSource);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ============ AES 加解密（Web Crypto API） ============
+// ============ CRC 查表法实现 ============
+
+// CRC-8 查表 (多项式 0x07)
+const CRC8_TABLE: number[] = [];
+for (let i = 0; i < 256; i++) {
+  let crc = i;
+  for (let j = 0; j < 8; j++) {
+    crc = (crc & 0x80) ? ((crc << 1) ^ 0x07) : (crc << 1);
+  }
+  CRC8_TABLE[i] = crc & 0xFF;
+}
+
+// CRC-16-CCITT 查表 (多项式 0x1021)
+const CRC16_CCITT_TABLE: number[] = [];
+for (let i = 0; i < 256; i++) {
+  let crc = i << 8;
+  for (let j = 0; j < 8; j++) {
+    crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+  }
+  CRC16_CCITT_TABLE[i] = crc & 0xFFFF;
+}
+
+// CRC-16-MODBUS 查表 (多项式 0x8005, 输入反转)
+const CRC16_MODBUS_TABLE: number[] = [];
+for (let i = 0; i < 256; i++) {
+  let crc = i;
+  for (let j = 0; j < 8; j++) {
+    crc = (crc & 1) ? ((crc >> 1) ^ 0xA001) : (crc >> 1);
+  }
+  CRC16_MODBUS_TABLE[i] = crc & 0xFFFF;
+}
+
+// CRC-32 查表 (多项式 0x04C11DB7, 输入反转)
+const CRC32_TABLE: number[] = [];
+for (let i = 0; i < 256; i++) {
+  let crc = i;
+  for (let j = 0; j < 8; j++) {
+    crc = (crc & 1) ? ((crc >> 1) ^ 0xEDB88320) : (crc >> 1);
+  }
+  CRC32_TABLE[i] = crc >>> 0;
+}
+
+// 反转位
+function reflectBits(value: number, width: number): number {
+  let result = 0;
+  for (let i = 0; i < width; i++) {
+    if (value & (1 << i)) {
+      result |= 1 << (width - 1 - i);
+    }
+  }
+  return result;
+}
+
+function calcCRC8(data: Uint8Array): number {
+  let crc = 0;
+  for (const byte of data) {
+    crc = CRC8_TABLE[(crc ^ byte) & 0xFF];
+  }
+  return crc & 0xFF;
+}
+
+function calcCRC16Modbus(data: Uint8Array): number {
+  let crc = 0xFFFF;
+  for (const byte of data) {
+    crc = ((crc >> 8) ^ CRC16_MODBUS_TABLE[(crc ^ byte) & 0xFF]) & 0xFFFF;
+  }
+  return crc;
+}
+
+function calcCRC16Ccitt(data: Uint8Array): number {
+  let crc = 0xFFFF;
+  for (const byte of data) {
+    crc = ((crc << 8) ^ CRC16_CCITT_TABLE[((crc >> 8) ^ byte) & 0xFF]) & 0xFFFF;
+  }
+  return crc;
+}
+
+function calcCRC16Ibm(data: Uint8Array): number {
+  let crc = 0x0000;
+  for (const byte of data) {
+    crc = ((crc >> 8) ^ CRC16_MODBUS_TABLE[(crc ^ byte) & 0xFF]) & 0xFFFF;
+  }
+  return crc;
+}
+
+function calcCRC32(data: Uint8Array): number {
+  let crc = 0xFFFFFFFF;
+  for (const byte of data) {
+    crc = ((crc >> 8) ^ CRC32_TABLE[(crc ^ byte) & 0xFF]) >>> 0;
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+// 自定义 CRC
+function calcCustomCRC(data: Uint8Array, width: number, poly: number, init: number, xorOut: number, refIn: boolean, refOut: boolean): number {
+  const mask = (1 << width) - 1;
+  const table: number[] = [];
+
+  for (let i = 0; i < 256; i++) {
+    let crc = refIn ? i : (i << (width - 8));
+    for (let j = 0; j < 8; j++) {
+      if (refIn) {
+        crc = (crc & 1) ? ((crc >> 1) ^ (reflectBits(poly, width) & mask)) : (crc >> 1);
+      } else {
+        crc = (crc & (1 << (width - 1))) ? ((crc << 1) ^ poly) : (crc << 1);
+      }
+    }
+    table[i] = crc & mask;
+  }
+
+  let crc = refIn ? reflectBits(init, width) : init;
+  for (const byte of data) {
+    if (refIn) {
+      crc = ((crc >> 8) ^ table[(crc ^ byte) & 0xFF]) & mask;
+    } else {
+      crc = ((crc << 8) ^ table[((crc >> (width - 8)) ^ byte) & 0xFF]) & mask;
+    }
+  }
+
+  if (refOut && !refIn) {
+    crc = reflectBits(crc, width);
+  }
+
+  return (crc ^ xorOut) & mask;
+}
+
+// ============ Adler-32 ============
+
+function calcAdler32(data: Uint8Array): number {
+  let a = 1, b = 0;
+  for (const byte of data) {
+    a = (a + byte) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+// ============ 校验和 ============
+
+function calcSum8(data: Uint8Array): number {
+  let sum = 0;
+  for (const byte of data) sum += byte;
+  return sum & 0xFF;
+}
+
+function calcSum16(data: Uint8Array): number {
+  let sum = 0;
+  for (const byte of data) sum += byte;
+  return sum & 0xFFFF;
+}
+
+function calcSum32(data: Uint8Array): number {
+  let sum = 0;
+  for (const byte of data) sum += byte;
+  return sum >>> 0;
+}
+
+function calcXOR8(data: Uint8Array): number {
+  let xor = 0;
+  for (const byte of data) xor ^= byte;
+  return xor & 0xFF;
+}
+
+// ============ AES 加解密 ============
 
 function str2ab(str: string): ArrayBuffer {
   return new TextEncoder().encode(str).buffer;
@@ -241,13 +402,29 @@ async function aesDecrypt(hexStr: string, keyStr: string, ivStr: string, mode: '
 // ============ 组件 ============
 
 export default function HashTool() {
+  const [activeTab, setActiveTab] = useState<TabType>('crypto');
+  const [inputMode, setInputMode] = useState<InputMode>('text');
   const [input, setInput] = useState('Hello, DevKit Pro!');
+
+  // 密码学哈希结果
   const [md5Hash, setMd5Hash] = useState('');
   const [sha1Hash, setSha1Hash] = useState('');
   const [sha256Hash, setSha256Hash] = useState('');
   const [sha512Hash, setSha512Hash] = useState('');
-  const [computed, setComputed] = useState(false);
+  const [cryptoComputed, setCryptoComputed] = useState(false);
 
+  // 校验和结果
+  const [selectedChecksum, setSelectedChecksum] = useState('crc32');
+
+  // 自定义 CRC 参数
+  const [customPoly, setCustomPoly] = useState('0x04C11DB7');
+  const [customInit, setCustomInit] = useState('0xFFFFFFFF');
+  const [customXorOut, setCustomXorOut] = useState('0xFFFFFFFF');
+  const [customRefIn, setCustomRefIn] = useState(true);
+  const [customRefOut, setCustomRefOut] = useState(true);
+  const [customWidth, setCustomWidth] = useState(32);
+
+  // AES
   const [aesMode, setAesMode] = useState<'CBC' | 'GCM'>('CBC');
   const [aesKey, setAesKey] = useState('mysecretkey12345');
   const [aesIv, setAesIv] = useState('1234567890123456');
@@ -256,34 +433,98 @@ export default function HashTool() {
   const [aesError, setAesError] = useState('');
   const [isAesEncrypt, setIsAesEncrypt] = useState(true);
 
+  const [copied, setCopied] = useState<string | null>(null);
   const toast = useToast();
   const { addHistory, getModuleHistory, clearModuleHistory } = useHistory();
 
-  // 计算所有哈希
-  const computeAll = useCallback(async () => {
-    if (!input.trim()) {
+  // 解析输入数据
+  const inputData = useMemo(() => {
+    if (!input.trim()) return new Uint8Array(0);
+    if (inputMode === 'text') {
+      return new TextEncoder().encode(input);
+    } else {
+      const hexStr = input.replace(/[^0-9A-Fa-f]/g, '');
+      const bytes: number[] = [];
+      for (let i = 0; i < hexStr.length; i += 2) {
+        const byteHex = hexStr.slice(i, i + 2);
+        if (byteHex.length === 2) bytes.push(parseInt(byteHex, 16));
+      }
+      return new Uint8Array(bytes);
+    }
+  }, [input, inputMode]);
+
+  // 计算所有密码学哈希
+  const computeCrypto = useCallback(async () => {
+    if (inputData.length === 0) {
       toast.error('请输入内容');
       return;
     }
-    setMd5Hash(md5(input));
-    setSha1Hash(await sha1(input));
-    setSha256Hash(await sha256(input));
-    setSha512Hash(await sha512(input));
-    setComputed(true);
+    const text = inputMode === 'text' ? input : new TextDecoder().decode(inputData);
+    setMd5Hash(md5(text));
+    setSha1Hash(await sha1(inputData));
+    setSha256Hash(await sha256(inputData));
+    setSha512Hash(await sha512(inputData));
+    setCryptoComputed(true);
     addHistory({
       moduleId: MODULE_ID,
       moduleName: MODULE_NAME,
       input: input.slice(0, 100),
-      output: 'SHA-256: ' + (await sha256(input)).slice(0, 32) + '...',
+      output: 'SHA-256: ' + (await sha256(inputData)).slice(0, 32) + '...',
     });
-  }, [input, addHistory, toast]);
+  }, [inputData, inputMode, input, addHistory, toast]);
 
-  // 复制哈希值
-  const handleCopy = async (value: string, label: string) => {
+  // 校验和结果（实时计算）
+  const checksumResults = useMemo(() => {
+    if (inputData.length === 0) return {};
+
+    const res: Record<string, { hex: string; dec: string; bits: number }> = {};
+
+    const crc32 = calcCRC32(inputData);
+    res['crc32'] = { hex: crc32.toString(16).toUpperCase().padStart(8, '0'), dec: crc32.toString(), bits: 32 };
+
+    const crc16Modbus = calcCRC16Modbus(inputData);
+    res['crc16-modbus'] = { hex: crc16Modbus.toString(16).toUpperCase().padStart(4, '0'), dec: crc16Modbus.toString(), bits: 16 };
+
+    const crc16Ccitt = calcCRC16Ccitt(inputData);
+    res['crc16-ccitt'] = { hex: crc16Ccitt.toString(16).toUpperCase().padStart(4, '0'), dec: crc16Ccitt.toString(), bits: 16 };
+
+    const crc16Ibm = calcCRC16Ibm(inputData);
+    res['crc16-ibm'] = { hex: crc16Ibm.toString(16).toUpperCase().padStart(4, '0'), dec: crc16Ibm.toString(), bits: 16 };
+
+    const crc8 = calcCRC8(inputData);
+    res['crc8'] = { hex: crc8.toString(16).toUpperCase().padStart(2, '0'), dec: crc8.toString(), bits: 8 };
+
+    const adler32 = calcAdler32(inputData);
+    res['adler32'] = { hex: adler32.toString(16).toUpperCase().padStart(8, '0'), dec: adler32.toString(), bits: 32 };
+
+    res['sum8'] = { hex: calcSum8(inputData).toString(16).toUpperCase().padStart(2, '0'), dec: calcSum8(inputData).toString(), bits: 8 };
+    res['sum16'] = { hex: calcSum16(inputData).toString(16).toUpperCase().padStart(4, '0'), dec: calcSum16(inputData).toString(), bits: 16 };
+    res['sum32'] = { hex: calcSum32(inputData).toString(16).toUpperCase().padStart(8, '0'), dec: calcSum32(inputData).toString(), bits: 32 };
+    res['xor8'] = { hex: calcXOR8(inputData).toString(16).toUpperCase().padStart(2, '0'), dec: calcXOR8(inputData).toString(), bits: 8 };
+
+    // 自定义 CRC
+    try {
+      const poly = parseInt(customPoly, 16);
+      const init = parseInt(customInit, 16);
+      const xorOut = parseInt(customXorOut, 16);
+      const customCrc = calcCustomCRC(inputData, customWidth, poly, init, xorOut, customRefIn, customRefOut);
+      const hexDigits = Math.ceil(customWidth / 4);
+      res['custom'] = { hex: customCrc.toString(16).toUpperCase().padStart(hexDigits, '0'), dec: customCrc.toString(), bits: customWidth };
+    } catch {
+      res['custom'] = { hex: '参数错误', dec: '-', bits: customWidth };
+    }
+
+    return res;
+  }, [inputData, customPoly, customInit, customXorOut, customRefIn, customRefOut, customWidth]);
+
+  // 复制
+  const handleCopy = useCallback((value: string, key: string) => {
     if (!value) return;
-    await copyToClipboard(value);
-    toast.success(`已复制 ${label}`);
-  };
+    copyToClipboard(value);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+    toast.success('已复制');
+  }, [toast]);
 
   // AES 加密
   const handleAesEncrypt = async () => {
@@ -321,7 +562,6 @@ export default function HashTool() {
     }
   };
 
-  // 随机生成密钥
   const generateRandomKey = () => {
     const arr = new Uint8Array(16);
     crypto.getRandomValues(arr);
@@ -337,15 +577,21 @@ export default function HashTool() {
   // 历史记录回填
   const handleSelectHistory = (item: { input: string; output: string }) => {
     setInput(item.input);
-    setComputed(false);
+    setCryptoComputed(false);
   };
 
   const handleClearHistory = () => {
     clearModuleHistory(MODULE_ID);
   };
 
-  // 快捷键：Ctrl+Enter 计算哈希
-  useModuleShortcuts(computeAll, () => handleCopy(sha256Hash, 'SHA-256'));
+  // 快捷键
+  useModuleShortcuts(computeCrypto, () => handleCopy(sha256Hash, 'sha256'));
+
+  const tabs = [
+    { id: 'crypto' as TabType, name: '密码学哈希', icon: Lock },
+    { id: 'checksum' as TabType, name: '校验和/CRC', icon: ShieldCheck },
+    { id: 'aes' as TabType, name: 'AES 加解密', icon: Key },
+  ];
 
   const hashItems = [
     { label: 'MD5', value: md5Hash, length: 32 },
@@ -354,168 +600,535 @@ export default function HashTool() {
     { label: 'SHA-512', value: sha512Hash, length: 128 },
   ];
 
+  const checksumList = [
+    { id: 'crc32', name: 'CRC-32 (IEEE)' },
+    { id: 'crc16-modbus', name: 'CRC-16 (Modbus)' },
+    { id: 'crc16-ccitt', name: 'CRC-16 (CCITT)' },
+    { id: 'crc16-ibm', name: 'CRC-16 (IBM)' },
+    { id: 'crc8', name: 'CRC-8' },
+    { id: 'adler32', name: 'Adler-32' },
+    { id: 'sum32', name: 'Sum32' },
+    { id: 'sum16', name: 'Sum16' },
+    { id: 'sum8', name: 'Sum8' },
+    { id: 'xor8', name: 'XOR8' },
+    { id: 'custom', name: '自定义 CRC' },
+  ];
+
   return (
-    <div>
+    <div style={{ maxWidth: 1000, margin: '0 auto' }}>
       <div className="module-header">
-        <h2>哈希计算 / AES 加解密</h2>
-        <p>MD5 / SHA-1 / SHA-256 / SHA-512 & AES</p>
+        <h2>哈希与校验</h2>
+        <p>密码学哈希 · 校验和/CRC · AES 加解密</p>
       </div>
 
-      {/* 哈希计算区 */}
-      <div className="tool-panel">
-        <div className="tool-row">
-          <label>输入文本</label>
-          <div className="field">
-            <textarea
-              value={input}
-              onChange={e => { setInput(e.target.value); setComputed(false); }}
-              rows={4}
-              placeholder="输入要计算哈希的文本..."
-            />
-          </div>
-        </div>
-
-        <div className="tool-row">
-          <label></label>
-          <div className="field btn-group">
-            <button onClick={computeAll}>
-              <Lock size={16} /> 计算哈希
+      {/* Tab 切换 */}
+      <div style={{
+        display: 'flex',
+        gap: 4,
+        marginBottom: 16,
+        background: 'var(--bg3)',
+        padding: 4,
+        borderRadius: 8
+      }}>
+        {tabs.map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                flex: 1,
+                padding: '10px 12px',
+                fontSize: 13,
+                fontWeight: activeTab === tab.id ? 600 : 400,
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                background: activeTab === tab.id ? 'var(--accent)' : 'transparent',
+                color: activeTab === tab.id ? '#fff' : 'var(--ink)',
+                transition: 'all 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
+              }}
+            >
+              <Icon size={16} />
+              {tab.name}
             </button>
-            <button className="secondary" onClick={() => { setInput(''); setComputed(false); }}>
-              清空
-            </button>
-          </div>
-        </div>
+          );
+        })}
+      </div>
 
-        {computed && hashItems.map(item => (
-          <div key={item.label} className="tool-row">
-            <label>{item.label}</label>
+      {/* 密码学哈希 Tab */}
+      {activeTab === 'crypto' && (
+        <div className="tool-panel">
+          {/* 输入模式切换 */}
+          <div className="tool-row">
+            <label>输入模式</label>
+            <div className="field btn-group" style={{ maxWidth: 200 }}>
+              <button
+                className={inputMode === 'text' ? '' : 'secondary'}
+                onClick={() => { setInputMode('text'); setCryptoComputed(false); }}
+              >
+                文本
+              </button>
+              <button
+                className={inputMode === 'hex' ? '' : 'secondary'}
+                onClick={() => { setInputMode('hex'); setCryptoComputed(false); }}
+              >
+                十六进制
+              </button>
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label>输入内容</label>
             <div className="field">
-              <div className="output-box">
-                <code style={{ fontFamily: 'var(--font-mono)', fontSize: 13, wordBreak: 'break-all' }}>
-                  {item.value}
-                </code>
-                <button className="ghost copy-btn" onClick={() => handleCopy(item.value, item.label)} title="复制">
-                  <Copy size={16} />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* AES 加解密区 */}
-      <div className="tool-panel">
-        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: 'var(--muted)' }}>
-          <Key size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
-          AES 加解密
-        </h3>
-
-        <div className="tool-row">
-          <label>模式</label>
-          <div className="field btn-group" style={{ maxWidth: 200 }}>
-            <button
-              className={aesMode === 'CBC' ? '' : 'secondary'}
-              onClick={() => setAesMode('CBC')}
-            >
-              CBC
-            </button>
-            <button
-              className={aesMode === 'GCM' ? '' : 'secondary'}
-              onClick={() => setAesMode('GCM')}
-            >
-              GCM
-            </button>
-          </div>
-        </div>
-
-        <div className="tool-row">
-          <label>密钥</label>
-          <div className="field">
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                value={aesKey}
-                onChange={e => setAesKey(e.target.value)}
-                placeholder="密钥（最长32字节）"
-                style={{ flex: 1, fontFamily: 'var(--font-mono)' }}
+              <textarea
+                value={input}
+                onChange={e => { setInput(e.target.value); setCryptoComputed(false); }}
+                rows={4}
+                placeholder={inputMode === 'text' ? '输入要计算哈希的文本...' : '输入十六进制字节，如：48 65 6C 6C 6F'}
+                style={{ fontFamily: inputMode === 'hex' ? 'var(--font-mono)' : 'inherit' }}
               />
-              <button className="ghost" onClick={generateRandomKey} title="随机生成">
-                <RefreshCw size={16} />
-              </button>
             </div>
           </div>
-        </div>
 
-        <div className="tool-row">
-          <label>IV</label>
-          <div className="field">
-            <div style={{ display: 'flex', gap: 8 }}>
-              <input
-                type="text"
-                value={aesIv}
-                onChange={e => setAesIv(e.target.value)}
-                placeholder="偏移量（最长16字节）"
-                style={{ flex: 1, fontFamily: 'var(--font-mono)' }}
-              />
-              <button className="ghost" onClick={generateRandomIv} title="随机生成">
-                <RefreshCw size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="tool-row">
-          <label>{isAesEncrypt ? '明文' : '密文'}</label>
-          <div className="field">
-            <textarea
-              value={aesInput}
-              onChange={e => { setAesInput(e.target.value); setAesOutput(''); setAesError(''); }}
-              rows={3}
-              placeholder={isAesEncrypt ? '输入要加密的文本...' : '输入要解密的十六进制...'}
-              style={{ fontFamily: 'var(--font-mono)' }}
-            />
-          </div>
-        </div>
-
-        <div className="tool-row">
-          <label></label>
-          <div className="field btn-group">
-            <button onClick={handleAesEncrypt}>
-              <Lock size={16} /> 加密
-            </button>
-            <button className="secondary" onClick={handleAesDecrypt}>
-              解密
-            </button>
-            <button className="secondary" onClick={() => { setAesInput(''); setAesOutput(''); setAesError(''); }}>
-              清空
-            </button>
-          </div>
-        </div>
-
-        {aesError && (
           <div className="tool-row">
             <label></label>
-            <div className="field error-text">{aesError}</div>
+            <div className="field btn-group">
+              <button onClick={computeCrypto}>
+                <Lock size={16} /> 计算哈希
+              </button>
+              <button className="secondary" onClick={() => { setInput(''); setCryptoComputed(false); }}>
+                清空
+              </button>
+              <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Hash size={14} />
+                {inputData.length} 字节
+              </div>
+            </div>
           </div>
-        )}
 
-        {aesOutput && (
+          {cryptoComputed && hashItems.map(item => (
+            <div key={item.label} className="tool-row">
+              <label>{item.label}</label>
+              <div className="field">
+                <div className="output-box">
+                  <code style={{ fontFamily: 'var(--font-mono)', fontSize: 13, wordBreak: 'break-all' }}>
+                    {item.value}
+                  </code>
+                  <button
+                    className="ghost copy-btn"
+                    onClick={() => handleCopy(item.value, item.label.toLowerCase())}
+                    title="复制"
+                  >
+                    {copied === item.label.toLowerCase() ? <FileCode size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 校验和 Tab */}
+      {activeTab === 'checksum' && (
+        <div className="tool-panel">
+          {/* 输入模式切换 */}
           <div className="tool-row">
-            <label>{isAesEncrypt ? '密文' : '明文'}</label>
+            <label>输入模式</label>
+            <div className="field btn-group" style={{ maxWidth: 200 }}>
+              <button
+                className={inputMode === 'text' ? '' : 'secondary'}
+                onClick={() => setInputMode('text')}
+              >
+                文本
+              </button>
+              <button
+                className={inputMode === 'hex' ? '' : 'secondary'}
+                onClick={() => setInputMode('hex')}
+              >
+                十六进制
+              </button>
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label>输入内容</label>
             <div className="field">
-              <div className="output-box">
-                <code style={{ fontFamily: 'var(--font-mono)', fontSize: 13, wordBreak: 'break-all' }}>
-                  {aesOutput}
-                </code>
-                <button className="ghost copy-btn" onClick={() => handleCopy(aesOutput, isAesEncrypt ? '密文' : '明文')} title="复制">
-                  <Copy size={16} />
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                rows={4}
+                placeholder={inputMode === 'text' ? '输入要计算校验和的文本...' : '输入十六进制字节，如：48 65 6C 6C 6F'}
+                style={{ fontFamily: inputMode === 'hex' ? 'var(--font-mono)' : 'inherit' }}
+              />
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label></label>
+            <div className="field">
+              <div style={{ fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Hash size={14} />
+                {inputData.length} 字节
+              </div>
+            </div>
+          </div>
+
+          {/* 自定义 CRC 参数 */}
+          {selectedChecksum === 'custom' && (
+            <div style={{
+              background: 'var(--bg3)',
+              padding: 12,
+              borderRadius: 6,
+              marginBottom: 12
+            }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>自定义 CRC 参数：</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>宽度 (bits)</label>
+                  <select
+                    value={customWidth}
+                    onChange={e => setCustomWidth(Number(e.target.value))}
+                    style={{
+                      width: '100%',
+                      padding: 6,
+                      fontSize: 12,
+                      background: 'var(--bg2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 4,
+                      color: 'var(--ink)'
+                    }}
+                  >
+                    <option value={8}>8</option>
+                    <option value={16}>16</option>
+                    <option value={32}>32</option>
+                    <option value={64}>64</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>多项式 (hex)</label>
+                  <input
+                    type="text"
+                    value={customPoly}
+                    onChange={e => setCustomPoly(e.target.value)}
+                    placeholder="0x..."
+                    style={{
+                      width: '100%',
+                      padding: 6,
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono)',
+                      background: 'var(--bg2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 4,
+                      color: 'var(--ink)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>初始值 (hex)</label>
+                  <input
+                    type="text"
+                    value={customInit}
+                    onChange={e => setCustomInit(e.target.value)}
+                    placeholder="0x..."
+                    style={{
+                      width: '100%',
+                      padding: 6,
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono)',
+                      background: 'var(--bg2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 4,
+                      color: 'var(--ink)'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: 'var(--muted)', display: 'block', marginBottom: 4 }}>输出异或 (hex)</label>
+                  <input
+                    type="text"
+                    value={customXorOut}
+                    onChange={e => setCustomXorOut(e.target.value)}
+                    placeholder="0x..."
+                    style={{
+                      width: '100%',
+                      padding: 6,
+                      fontSize: 12,
+                      fontFamily: 'var(--font-mono)',
+                      background: 'var(--bg2)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 4,
+                      color: 'var(--ink)'
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={customRefIn}
+                    onChange={e => setCustomRefIn(e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  输入反转
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink)', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={customRefOut}
+                    onChange={e => setCustomRefOut(e.target.checked)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  输出反转
+                </label>
+              </div>
+            </div>
+          )}
+
+          {inputData.length > 0 && checksumResults[selectedChecksum] && (
+            <div style={{
+              background: 'var(--bg3)',
+              padding: 16,
+              borderRadius: 6,
+              marginBottom: 12
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 12,
+                fontSize: 14,
+                fontWeight: 600
+              }}>
+                <ShieldCheck size={18} color="var(--accent)" />
+                {checksumList.find(c => c.id === selectedChecksum)?.name}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>HEX 格式</div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: 8,
+                    background: 'var(--bg2)',
+                    borderRadius: 4
+                  }}>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: 'var(--accent)'
+                    }}>
+                      {checksumResults[selectedChecksum].hex}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(checksumResults[selectedChecksum].hex, 'chk-hex')}
+                      style={{
+                        padding: 4,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: copied === 'chk-hex' ? 'var(--accent)' : 'var(--muted)'
+                      }}
+                    >
+                      {copied === 'chk-hex' ? <FileCode size={16} /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>DEC 格式</div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: 8,
+                    background: 'var(--bg2)',
+                    borderRadius: 4
+                  }}>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: 'var(--ink)'
+                    }}>
+                      {checksumResults[selectedChecksum].dec}
+                    </span>
+                    <button
+                      onClick={() => handleCopy(checksumResults[selectedChecksum].dec, 'chk-dec')}
+                      style={{
+                        padding: 4,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: copied === 'chk-dec' ? 'var(--accent)' : 'var(--muted)'
+                      }}
+                    >
+                      {copied === 'chk-dec' ? <FileCode size={16} /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 所有算法列表 */}
+          <div className="tool-row">
+            <label>选择算法</label>
+            <div className="field">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                gap: 8
+              }}>
+                {checksumList.map(alg => {
+                  const r = checksumResults[alg.id];
+                  return (
+                    <div
+                      key={alg.id}
+                      onClick={() => setSelectedChecksum(alg.id)}
+                      style={{
+                        padding: 10,
+                        background: selectedChecksum === alg.id ? 'var(--bg3)' : 'var(--bg2)',
+                        borderRadius: 6,
+                        border: selectedChecksum === alg.id ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 4 }}>{alg.name}</div>
+                      {r && (
+                        <div style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 13,
+                          color: selectedChecksum === alg.id ? 'var(--accent)' : 'var(--muted)'
+                        }}>
+                          {r.hex}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AES 加解密 Tab */}
+      {activeTab === 'aes' && (
+        <div className="tool-panel">
+          <div className="tool-row">
+            <label>模式</label>
+            <div className="field btn-group" style={{ maxWidth: 200 }}>
+              <button
+                className={aesMode === 'CBC' ? '' : 'secondary'}
+                onClick={() => setAesMode('CBC')}
+              >
+                CBC
+              </button>
+              <button
+                className={aesMode === 'GCM' ? '' : 'secondary'}
+                onClick={() => setAesMode('GCM')}
+              >
+                GCM
+              </button>
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label>密钥</label>
+            <div className="field">
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={aesKey}
+                  onChange={e => setAesKey(e.target.value)}
+                  placeholder="密钥（最长32字节）"
+                  style={{ flex: 1, fontFamily: 'var(--font-mono)' }}
+                />
+                <button className="ghost" onClick={generateRandomKey} title="随机生成">
+                  <RefreshCw size={16} />
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+
+          <div className="tool-row">
+            <label>IV</label>
+            <div className="field">
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  value={aesIv}
+                  onChange={e => setAesIv(e.target.value)}
+                  placeholder="偏移量（最长16字节）"
+                  style={{ flex: 1, fontFamily: 'var(--font-mono)' }}
+                />
+                <button className="ghost" onClick={generateRandomIv} title="随机生成">
+                  <RefreshCw size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label>{isAesEncrypt ? '明文' : '密文'}</label>
+            <div className="field">
+              <textarea
+                value={aesInput}
+                onChange={e => { setAesInput(e.target.value); setAesOutput(''); setAesError(''); }}
+                rows={3}
+                placeholder={isAesEncrypt ? '输入要加密的文本...' : '输入要解密的十六进制...'}
+                style={{ fontFamily: 'var(--font-mono)' }}
+              />
+            </div>
+          </div>
+
+          <div className="tool-row">
+            <label></label>
+            <div className="field btn-group">
+              <button onClick={handleAesEncrypt}>
+                <Lock size={16} /> 加密
+              </button>
+              <button className="secondary" onClick={handleAesDecrypt}>
+                解密
+              </button>
+              <button className="secondary" onClick={() => { setAesInput(''); setAesOutput(''); setAesError(''); }}>
+                清空
+              </button>
+            </div>
+          </div>
+
+          {aesError && (
+            <div className="tool-row">
+              <label></label>
+              <div className="field error-text">{aesError}</div>
+            </div>
+          )}
+
+          {aesOutput && (
+            <div className="tool-row">
+              <label>{isAesEncrypt ? '密文' : '明文'}</label>
+              <div className="field">
+                <div className="output-box">
+                  <code style={{ fontFamily: 'var(--font-mono)', fontSize: 13, wordBreak: 'break-all' }}>
+                    {aesOutput}
+                  </code>
+                  <button className="ghost copy-btn" onClick={() => handleCopy(aesOutput, 'aes-out')} title="复制">
+                    {copied === 'aes-out' ? <FileCode size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <HistoryPanel
         history={getModuleHistory(MODULE_ID)}
