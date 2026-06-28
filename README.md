@@ -27,6 +27,9 @@
 | **Cron 工具** | Cron 表达式解析、自然语言描述、显示执行时间、常用模板 |
 | **代码片段** | 创建/编辑/删除代码片段、搜索筛选、标签管理、语法高亮 |
 | **内存布局** | C++ struct 内存对齐可视化、字段详情、padding 计算、32/64位切换 |
+| **程序员计算器** | 进制转换（HEX/DEC/OCT/BIN）、位操作、二进制位可视化、BigInt 支持 |
+| **CMake 辅助** | CMakeLists.txt 代码编辑、常用命令模板库、依赖关系解析、错误检测 |
+| **Enum 生成器** | 枚举定义、多语言代码生成（C++11/C/Qt/C#/JSON）、批量导入、一键复制 |
 
 ### 📜 历史记录
 
@@ -122,7 +125,7 @@ src/
 │   └── useToast.tsx     # Toast Hook
 ├── modules/             # 工具模块
 │   ├── home/           # 首页仪表盘
-│   ├── colorTool/       # 颜色工具
+│   ├── colorTool/       # 颢色工具
 │   ├── cronTool/        # Cron 工具
 │   ├── encoder/         # 编码转换
 │   ├── hashTool/        # 哈希计算
@@ -131,7 +134,10 @@ src/
 │   ├── regexTester/     # 正则表达式测试
 │   ├── snippetManager/   # 代码片段
 │   ├── memoryLayout/    # 结构体内存布局
-│   └── timestamp/        # 时间戳工具
+│   ├── timestamp/        # 时间戳工具
+│   ├── programmerCalc/  # 程序员计算器
+│   ├── cmakeHelper/     # CMake 辅助
+│   └── enumGenerator/   # Enum 生成器
 ├── types/               # TypeScript 类型定义
 ├── utils/               # 工具函数
 ├── App.tsx              # 应用入口
@@ -248,6 +254,54 @@ src/
 6. 统计汇总：总大小、有效数据、padding 量、padding 占比、最大对齐
 7. 支持深色主题预览开关
 8. 5个示例模板：学生信息、数据包头、点坐标、链表节点、混合类型
+
+### 程序员计算器
+
+1. 选择数据类型：BYTE（8位）、WORD（16位）、DWORD（32位）、QWORD（64位）
+2. 选择进制：HEX（十六进制）、DEC（十进制）、OCT（八进制）、BIN（二进制）
+3. 输入数值，实时显示所有进制的转换结果
+4. 点击二进制位格子可切换 0/1，支持 BigInt 精度
+5. 位操作：AND、OR、XOR、NOT、左移、右移、循环移位
+6. 常用运算：加、减、乘、除、取模、幂运算
+7. 支持括号和键盘输入
+8. 响应式布局，移动端进制框自动换行显示
+
+### CMake 辅助
+
+1. 左侧代码编辑区编写 CMakeLists.txt（等宽字体）
+2. 右侧辅助面板：
+   - 常用命令模板库（7 个分类，点击自动插入到光标位置）
+     - 项目配置类：cmake_minimum_required、project、set(CMAKE_CXX_STANDARD)
+     - 查找依赖类：find_package(Qt6)、find_package(Threads)、find_package(Boost)
+     - 目标定义类：add_executable、add_library、target_sources、target_link_libraries
+     - 编译选项类：target_compile_options、target_compile_features
+     - 安装打包类：install、CPack 配置
+     - 测试类：enable_testing、add_test
+     - 条件判断类：if/elseif/else/endif
+   - 实时辅助信息：
+     - 解析 find_package 的依赖关系
+     - 解析 target_link_libraries 的链接库
+     - 检测常见错误：大小写敏感、if/endif 匹配、foreach/endforeach 匹配
+     - 显示所有 ${XXX} 变量名
+3. 3 个完整项目模板：Qt6 最小项目、C++17 库项目、CMake 子目录项目
+4. 支持复制内容或下载为 CMakeLists.txt 文件
+
+### Enum 生成器
+
+1. 输入枚举名称（如 Status、Color、FileType）
+2. 动态添加枚举值：
+   - 名称：枚举值标识符
+   - 值：可选整数值，不填则自动从 0 递增
+   - 注释：可选的中文/英文注释
+3. 支持上下移动调整顺序、删除枚举值
+4. 批量导入：粘贴逗号或换行分隔的文本自动填充
+5. Tab 切换查看不同格式：
+   - C++11 enum class：包含 to_string 和 from_string 函数
+   - C enum：typedef enum 格式
+   - Qt enum：带 Q_ENUM 宏
+   - C# enum：public enum 格式
+   - JSON Schema：带 descriptions 字段
+6. 一键复制生成的代码
 
 ### 数据管理
 
