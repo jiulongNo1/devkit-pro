@@ -19,6 +19,7 @@ import HashTool from './modules/hashTool';
 import QrTool from './modules/qrTool';
 import CronTool from './modules/cronTool';
 import SnippetManager from './modules/snippetManager';
+import MemoryLayout from './modules/memoryLayout';
 import Home from './modules/home';
 import { useTheme } from './hooks/useTheme';
 import { HistoryProvider } from './hooks/useHistory';
@@ -30,7 +31,7 @@ import { ShortcutsProvider, useShortcuts } from './hooks/useShortcuts';
  * key: 模块唯一标识
  * value: 对应的 React 组件（类似于 QWidget*）
  */
-const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager'];
+const MODULES: string[] = ['home', 'json', 'regex', 'encoder', 'timestamp', 'colorTool', 'hashTool', 'qrTool', 'cronTool', 'snippetManager', 'memoryLayout'];
 type ModuleId = typeof MODULES[number];
 
 /**
@@ -49,6 +50,7 @@ const moduleComponents: Record<ModuleId, React.ComponentType<any>> = {
   qrTool: QrTool,
   cronTool: CronTool,
   snippetManager: SnippetManager,
+  memoryLayout: MemoryLayout,
 };
 
 /**

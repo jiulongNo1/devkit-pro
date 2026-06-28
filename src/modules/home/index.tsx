@@ -30,7 +30,8 @@ import {
   Copy,
   RefreshCw,
   Dices,
-  Calendar
+  Calendar,
+  LayoutGrid
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -49,6 +50,7 @@ const TOOL_MODULES = [
   { id: 'qrTool', name: '二维码生成', icon: QrCode, desc: '生成 / 自定义 / 下载', color: '#84cc16' },
   { id: 'cronTool', name: 'Cron 工具', icon: Timer, desc: '表达式解析 / 执行时间', color: '#f97316' },
   { id: 'snippetManager', name: '代码片段', icon: BookMarked, desc: '保存 / 搜索 / 管理', color: '#6366f1' },
+  { id: 'memoryLayout', name: '内存布局', icon: LayoutGrid, desc: 'Struct 内存可视化', color: '#f43f5e' },
 ];
 
 interface Props {
