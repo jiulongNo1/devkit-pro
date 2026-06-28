@@ -280,6 +280,7 @@ export default function MemoryLayout() {
   const [darkTheme, setDarkTheme] = useState(false);
   const [showTable, setShowTable] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const layout = useMemo(() => {
     try {
@@ -348,45 +349,53 @@ export default function MemoryLayout() {
 
           {/* 示例模板下拉 */}
           <div style={{ position: 'relative' }}>
-            <button className="secondary" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button
+              className="secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+              onClick={() => setShowTemplates(!showTemplates)}
+            >
               <LayoutGrid size={14} />
               示例模板
               <ChevronDown size={14} />
             </button>
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              marginTop: 4,
-              background: 'var(--bg)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              zIndex: 100,
-              minWidth: 180,
-              display: 'none',
-            }} className="template-dropdown">
-              {TEMPLATES.map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => loadTemplate(t)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px 16px',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg2)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                >
-                  {t.name}
-                </button>
-              ))}
-            </div>
+            {showTemplates && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                marginTop: 4,
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                zIndex: 100,
+                minWidth: 180,
+              }} className="template-dropdown">
+                {TEMPLATES.map((t, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      loadTemplate(t);
+                      setShowTemplates(false);
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '8px 16px',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg2)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
