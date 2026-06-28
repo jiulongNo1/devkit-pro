@@ -31,7 +31,8 @@ import {
   RefreshCw,
   Dices,
   Calendar,
-  LayoutGrid
+  LayoutGrid,
+  Calculator
 } from 'lucide-react';
 import { useHistory } from '../../hooks/useHistory';
 import { useToast } from '../../hooks/useToast';
@@ -51,6 +52,7 @@ const TOOL_MODULES = [
   { id: 'cronTool', name: 'Cron 工具', icon: Timer, desc: '表达式解析 / 执行时间', color: '#f97316' },
   { id: 'snippetManager', name: '代码片段', icon: BookMarked, desc: '保存 / 搜索 / 管理', color: '#6366f1' },
   { id: 'memoryLayout', name: '内存布局', icon: LayoutGrid, desc: 'Struct 内存可视化', color: '#f43f5e' },
+  { id: 'programmerCalc', name: '程序员计算器', icon: Calculator, desc: '进制转换 / 位操作', color: '#0ea5e9' },
 ];
 
 interface Props {
