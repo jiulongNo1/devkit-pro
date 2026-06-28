@@ -13,8 +13,9 @@
  * - 支持 32位/64位模式切换
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { LayoutGrid, Moon, Sun, Info, Table, ChevronDown } from 'lucide-react';
+import { useHistory } from '../../hooks/useHistory';
 
 interface Field {
   name: string;
@@ -333,6 +334,9 @@ function parseStruct(code: string, bitMode: BitMode): StructLayout | null {
 /**
  * 主组件
  */
+const MODULE_ID = 'memoryLayout';
+const MODULE_NAME = '内存布局';
+
 export default function MemoryLayout() {
   const [code, setCode] = useState(TEMPLATES[0].code);
   const [bitMode, setBitMode] = useState<BitMode>('64');
@@ -340,6 +344,7 @@ export default function MemoryLayout() {
   const [showTable, setShowTable] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const { addHistory } = useHistory();
 
   const layout = useMemo(() => {
     try {
@@ -355,6 +360,17 @@ export default function MemoryLayout() {
       return null;
     }
   }, [code, bitMode]);
+
+  useEffect(() => {
+    if (layout && !error) {
+      addHistory({
+        moduleId: MODULE_ID,
+        moduleName: MODULE_NAME,
+        input: `struct ${layout.name} (${bitMode}位)`,
+        output: `总大小: ${layout.totalSize}B, Padding: ${layout.paddingSize}B`,
+      });
+    }
+  }, [layout, bitMode, error, addHistory]);
 
   const loadTemplate = (template: typeof TEMPLATES[0]) => {
     setCode(template.code);
